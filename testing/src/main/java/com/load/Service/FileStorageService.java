@@ -14,7 +14,7 @@ import java.util.Set;
 @Service
 public class FileStorageService {
     private final Path uploadDir;
-    private final Set<String> allowedExtensions = Set.of("jmx", "txt", "json"); // Example allowed extensions
+    private final Set<String> allowedExtensions = Set.of("jmx", "txt", "json","zip", "tar", "gz", "sh" ); // Example allowed extensions
     private final long maxFileSize = 10 * 1024 * 1024; // 10 MB
 
     public FileStorageService() throws IOException {
