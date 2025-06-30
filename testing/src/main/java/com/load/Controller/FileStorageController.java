@@ -15,11 +15,13 @@ import com.load.Service.FileStorageService;
 
 @RestController
 @RequestMapping("/api/load-tests")
-public class LoadTestController {
+public class FileStorageController {
 
     private final FileStorageService fileStorageService;
 
-    public LoadTestController(FileStorageService fileStorageService) {
+    
+
+    public FileStorageController(FileStorageService fileStorageService) {
         this.fileStorageService = fileStorageService;
     }
 
