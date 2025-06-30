@@ -3,6 +3,7 @@ package com.load.Controller;
 
 
 import com.load.Service.LoadTestConfigService;
+import com.load.DTO.LoadTestConfigRequest;
 import com.load.Model.LoadTestConfig;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
