@@ -3,12 +3,14 @@ package com.load.Model;
 
 
 import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+
 @Getter@Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,7 +26,17 @@ public class LoadTestConfig {
     private int rampUpPeriod;
     private int testDuration;
     private LocalDateTime createdAt;
+    private LocalDateTime scheduledExecutionTime;
 
+    @Enumerated(EnumType.STRING)
+    private CrudType crudType;
+
+    private String fileName; // The uploaded file's name
+    private boolean scheduled;
+
+
+
+   
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

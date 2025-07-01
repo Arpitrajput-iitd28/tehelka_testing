@@ -22,6 +22,12 @@ public class FileStorageService {
         Files.createDirectories(uploadDir);
     }
 
+    public String readFileContent(Path filePath) throws IOException {
+        // filePath should be the full path returned by store()
+        return Files.readString(filePath);
+    }
+    
+
     public String store(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new RuntimeException("No selected file");

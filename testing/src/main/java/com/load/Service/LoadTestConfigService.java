@@ -23,6 +23,8 @@ public class LoadTestConfigService {
         config.setNumUsers(request.getNumUsers());
         config.setRampUpPeriod(request.getRampUpPeriod());
         config.setTestDuration(request.getTestDuration());
+        config.setScheduledExecutionTime(request.getScheduledExecutionTime());
+        
         return loadTestConfigRepository.save(config);
     }
 }

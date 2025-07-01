@@ -29,6 +29,7 @@ public class FileStorageController {
     public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
         try {
             String filePath = fileStorageService.store(file);
+            
             return ResponseEntity.ok("File uploaded: " + filePath);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Failed to upload file: " + e.getMessage());

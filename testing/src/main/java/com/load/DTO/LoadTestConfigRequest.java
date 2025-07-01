@@ -1,5 +1,9 @@
 package com.load.DTO;
 
+import java.time.LocalDateTime;
+
+import com.load.Model.CrudType;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +16,10 @@ public class LoadTestConfigRequest {
     private int numUsers;
     private int rampUpPeriod; // in seconds
     private int testDuration; // in seconds
-
+    private LocalDateTime scheduledExecutionTime;
+    private CrudType crudType;
+    private String requestBodyFilePath;
+   
 
 }
 
