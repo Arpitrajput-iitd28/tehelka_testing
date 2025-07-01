@@ -5,7 +5,7 @@ import 'project.dart'; // Your Project model
 const String baseUrl = 'https://your-backend-api.com'; // Replace with your API base URL
 
 Future<List<Project>> fetchProjects() async {
-  final response = await http.get(Uri.parse('$baseUrl/projects'));
+  final response = await http.get(Uri.parse('$baseUrl/api/load-test/uploads'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
     return data.map((json) => Project.fromJson(json)).toList();
@@ -16,7 +16,7 @@ Future<List<Project>> fetchProjects() async {
 
 Future<Project> createProject(String title, String? filePath) async {
   final response = await http.post(
-    Uri.parse('$baseUrl/projects'),
+    Uri.parse('$baseUrl/api/load-test/upload'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'name': title, 'filePath': filePath}),
   );

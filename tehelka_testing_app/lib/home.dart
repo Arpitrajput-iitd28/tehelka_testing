@@ -58,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _addProject(String title, PlatformFile? pickedFile) async {
     try {
-      // If your backend supports file upload, send pickedFile as well
       final newProject = await createProject(title, pickedFile?.name);
       setState(() {
         projects.add(newProject);
@@ -430,5 +429,260 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Your _ParameterPromptDialog implementation remains unchanged.
-// Make sure to include it below, as in your current code.
+class _ParameterPromptDialog extends StatefulWidget {
+  final Project project;
+  final Function(DateTime scheduledDateTime, Map<String, String> params) onRun;
+  const _ParameterPromptDialog({required this.project, required this.onRun});
+
+  @override
+  State<_ParameterPromptDialog> createState() => _ParameterPromptDialogState();
+}
+
+class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
+  final TextEditingController usersController = TextEditingController();
+  final TextEditingController urlController = TextEditingController();
+  final TextEditingController rampUpController = TextEditingController();
+  final TextEditingController testPeriodController = TextEditingController();
+  final TextEditingController loopController = TextEditingController();
+  final TextEditingController assertionController = TextEditingController();
+  final TextEditingController testDataController = TextEditingController();
+
+  DateTime? scheduledDate;
+  TimeOfDay? scheduledTime;
+  bool showAdvanced = false;
+
+  // CRUD dropdown
+  final List<String> crudOptions = ['Create', 'Read', 'Update', 'Delete'];
+  String selectedCrud = 'Read';
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: kCardColor,
+      title: Text(
+        'Test ${widget.project.name}',
+        style: const TextStyle(color: Colors.white),
+      ),
+      content: SizedBox(
+        width: 350,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Operation',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: kAccentColor,
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+                dropdownColor: kAccentColor,
+                value: selectedCrud,
+                iconEnabledColor: Colors.white,
+                style: const TextStyle(color: Colors.white),
+                items: crudOptions
+                    .map((option) => DropdownMenuItem(
+                          value: option,
+                          child: Text(option, style: const TextStyle(color: Colors.white)),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedCrud = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+              _darkInput(usersController, 'Users', TextInputType.number),
+              const SizedBox(height: 8),
+              _darkInput(urlController, 'Target URL', TextInputType.url),
+              const SizedBox(height: 8),
+              _darkInput(rampUpController, 'Ramp-up Period (sec)', TextInputType.number),
+              const SizedBox(height: 8),
+              _darkInput(testPeriodController, 'Test Period (min)', TextInputType.number),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: scheduledDate ?? DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            scheduledDate = picked;
+                          });
+                        }
+                      },
+                      child: AbsorbPointer(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Date',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white24),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            fillColor: kAccentColor,
+                            filled: true,
+                            suffixIcon: const Icon(Icons.calendar_today, color: Colors.white54),
+                          ),
+                          controller: TextEditingController(
+                            text: scheduledDate == null
+                                ? ''
+                                : "${scheduledDate!.day.toString().padLeft(2, '0')}-${scheduledDate!.month.toString().padLeft(2, '0')}-${scheduledDate!.year}",
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: scheduledTime ?? TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            scheduledTime = picked;
+                          });
+                        }
+                      },
+                      child: AbsorbPointer(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Time',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white24),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            fillColor: kAccentColor,
+                            filled: true,
+                            suffixIcon: const Icon(Icons.access_time, color: Colors.white54),
+                          ),
+                          controller: TextEditingController(
+                            text: scheduledTime == null
+                                ? ''
+                                : scheduledTime!.format(context),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => setState(() => showAdvanced = !showAdvanced),
+                child: Text(
+                  showAdvanced ? 'Hide Advanced Features' : 'Show Advanced Features',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+              if (showAdvanced) ...[
+                _darkInput(loopController, 'Loop', TextInputType.number),
+                const SizedBox(height: 8),
+                _darkInput(assertionController, 'Assertion', TextInputType.text),
+                const SizedBox(height: 8),
+                _darkInput(testDataController, 'Test Data', TextInputType.text),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            if (_allFieldsValid()) {
+              if (scheduledDate != null && scheduledTime != null) {
+                final scheduledDateTime = DateTime(
+                  scheduledDate!.year,
+                  scheduledDate!.month,
+                  scheduledDate!.day,
+                  scheduledTime!.hour,
+                  scheduledTime!.minute,
+                );
+                if (scheduledDateTime.isBefore(DateTime.now())) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Cannot schedule test in the past.')),
+                  );
+                  return;
+                }
+                widget.onRun(scheduledDateTime, {
+                  'Operation': selectedCrud,
+                  'Users': usersController.text,
+                  'Target URL': urlController.text,
+                  'Ramp-up Period (sec)': rampUpController.text,
+                  'Test Period (min)': testPeriodController.text,
+                  if (showAdvanced && loopController.text.isNotEmpty) 'Loop': loopController.text,
+                  if (showAdvanced && assertionController.text.isNotEmpty) 'Assertion': assertionController.text,
+                  if (showAdvanced && testDataController.text.isNotEmpty) 'Test Data': testDataController.text,
+                });
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Test scheduled!')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please select both date and time.')),
+                );
+              }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please fill all required fields.')),
+              );
+            }
+          },
+          child: const Text('Run', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    );
+  }
+
+  Widget _darkInput(TextEditingController controller, String label, TextInputType type) {
+    return TextField(
+      controller: controller,
+      keyboardType: type,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white24),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        fillColor: kAccentColor,
+        filled: true,
+      ),
+    );
+  }
+
+  bool _allFieldsValid() {
+    return usersController.text.isNotEmpty &&
+        urlController.text.isNotEmpty &&
+        rampUpController.text.isNotEmpty &&
+        testPeriodController.text.isNotEmpty;
+  }
+}
+

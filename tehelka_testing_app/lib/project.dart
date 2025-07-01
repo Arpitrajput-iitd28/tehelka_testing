@@ -1,32 +1,30 @@
-// lib/project.dart
-
 import 'package:file_picker/file_picker.dart';
+
+class FileInfo {
+  final String name;
+  final int size;
+
+  FileInfo(this.name, this.size);
+
+  factory FileInfo.fromJson(Map<String, dynamic> json) {
+    return FileInfo(
+      json['name'],
+      json['size'],
+    );
+  }
+}
 
 class Project {
   final String name;
-  final PlatformFile? file; // Only used for local file picking (optional)
-  // Add more fields if your backend returns them, e.g.:
-  // final int? id;
-  // final String? filePath;
+  final PlatformFile? file; // Only for local files
 
   Project(this.name, {this.file});
 
-  // For API integration: create a Project from JSON
   factory Project.fromJson(Map<String, dynamic> json) {
-    return Project(
-      json['name'],
-      // file: null, // API does not provide PlatformFile
-      // id: json['id'], // Uncomment if your API returns an id
-      // filePath: json['filePath'], // Uncomment if your API returns filePath
-    );
+    return Project(json['name']);
   }
 
-  // For sending data to the API (if needed)
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      // 'id': id, // Uncomment if needed
-      // 'filePath': filePath, // Uncomment if needed
-    };
+    return {'name': name};
   }
 }
