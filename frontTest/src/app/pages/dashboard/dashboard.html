@@ -1,0 +1,157 @@
+<app-layout pageTitle="Dashboard">
+  <!-- Quick Stats Cards -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-play-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{totalTests}}</h3>
+          <p>Total Tests</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{runningTests}}</h3>
+          <p>Running Tests</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{completedTests}}</h3>
+          <p>Completed</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{failedTests}}</h3>
+          <p>Failed Tests</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Tests Table -->
+  <section class="tests-section">
+    <div class="section-header">
+      <h2>Recent Tests</h2>
+      <div class="filter-controls">
+        <select [(ngModel)]="statusFilter" (change)="filterTests()">
+          <option value="">All Status</option>
+          <option value="RUNNING">Running</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="FAILED">Failed</option>
+          <option value="SCHEDULED">Scheduled</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="tests-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Test Name</th>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Start Time</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let test of filteredTests" [class]="'status-' + test.status.toLowerCase()">
+            <td>{{test.name}}</td>
+            <td>{{test.projectName}}</td>
+            <td>
+              <span class="status-badge" [class]="'status-' + test.status.toLowerCase()">
+                {{test.status}}
+              </span>
+            </td>
+            <td>{{test.startTime | date:'medium'}}</td>
+            <td>{{test.duration || 'N/A'}}</td>
+            <td class="actions">
+              <button *ngIf="test.status === 'COMPLETED'" (click)="viewReport(test.id)" class="btn-view">
+                <i class="fas fa-chart-line"></i> View Report
+              </button>
+              <button *ngIf="test.status === 'RUNNING'" (click)="stopTest(test.id)" class="btn-stop">
+                <i class="fas fa-stop"></i> Stop
+              </button>
+              <button *ngIf="test.status === 'SCHEDULED'" (click)="cancelTest(test.id)" class="btn-cancel">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Create Test Modal -->
+  <div *ngIf="showCreateTestModal" class="modal-overlay" (click)="closeModal($event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create New Load Test</h3>
+        <button (click)="showCreateTestModal = false" class="close-btn">×</button>
+      </div>
+      
+      <form [formGroup]="createTestForm" (ngSubmit)="createTest()" class="test-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Test Name</label>
+            <input type="text" formControlName="testName" placeholder="Enter test name">
+          </div>
+          
+          <div class="form-group">
+            <label>Project Name</label>
+            <input type="text" formControlName="projectName" placeholder="Enter project name">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Test Script</label>
+          <div class="file-upload-section">
+            <input type="file" (change)="onFileSelected($event)" accept=".jmx,.js,.yaml">
+            <span>Or select from GitHub repository</span>
+            <input type="text" formControlName="githubUrl" placeholder="GitHub repository URL">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Virtual Users</label>
+            <input type="number" formControlName="virtualUsers" placeholder="Number of users">
+          </div>
+          
+          <div class="form-group">
+            <label>Duration (minutes)</label>
+            <input type="number" formControlName="duration" placeholder="Test duration">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Schedule Test</label>
+          <input type="datetime-local" formControlName="scheduleTime">
+          <small>Leave empty to run immediately</small>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" (click)="showCreateTestModal = false" class="btn-secondary">Cancel</button>
+          <button type="submit" [disabled]="createTestForm.invalid" class="btn-primary">Create Test</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</app-layout>

@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #55afd9 0%, #1b0ddb00 50%, #60a5fa 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+    padding: 2rem;
+}
+
+/* Logo positioning */
+.logo-container {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    z-index: 10;
+}
+
+.logo {
+    height: 200px;
+    width: auto;
+    filter: drop-shadow(0 4px 8px rgba(11, 225, 61, 0.2));
+}
+
+/* Modern login card with blue theme */
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 
+        0 25px 50px rgba(30, 58, 138, 0.15),
+        0 1px 3px rgba(59, 130, 246, 0.1);
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+/* Header styling with blue theme */
+.login-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.login-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
+}
+
+.login-header p {
+    font-size: 1rem;
+    color: #475569;
+    font-weight: 400;
+    margin: 0;
+}
+
+/* Form styling */
+.login-form {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #1e40af;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #bfdbfe;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+    color: #1e40af;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-group input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+/* Blue gradient button */
+.login-btn {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+}
+
+.login-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.login-btn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.loading-spinner {
+    display: inline-flex;
+    align-items: center;
+}
+
+.loading-spinner::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid transparent;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error messages */
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.global-error {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: #fef2f2;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+}
+
+/* Footer with blue theme */
+.login-footer {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.login-footer p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.signup-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.signup-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 1rem;
+    }
+    
+    .logo-container {
+        top: 1rem;
+        right: 1rem;
+    }
+    
+    .logo {
+        height: 45px;
+    }
+    
+    .login-card {
+        padding: 2rem;
+        max-width: 100%;
+    }
+    
+    .login-header h1 {
+        font-size: 1.75rem;
+    }
+}

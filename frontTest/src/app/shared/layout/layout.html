@@ -1,0 +1,182 @@
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <img src="StressBenchLogo.PNG" alt="StressBench" class="sidebar-logo">
+      <span *ngIf="!sidebarCollapsed" class="sidebar-title">StressBench</span>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <!-- Dashboard -->
+      <div class="nav-item">
+        <a routerLink="/dashboard" class="nav-link" routerLinkActive="active">
+          <i class="fas fa-tachometer-alt"></i>
+          <span *ngIf="!sidebarCollapsed">Dashboard</span>
+        </a>
+      </div>
+      
+      <!-- Tests CRUD Dropdown -->
+      <div class="nav-item dropdown" [class.open]="testsDropdownOpen">
+        <button class="nav-link dropdown-toggle" (click)="toggleTestsDropdown()">
+          <i class="fas fa-vial"></i>
+          <span *ngIf="!sidebarCollapsed">Tests</span>
+          <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down dropdown-arrow" 
+             [class.rotated]="testsDropdownOpen"></i>
+        </button>
+        
+        <div class="dropdown-menu" *ngIf="testsDropdownOpen && !sidebarCollapsed">
+          <a routerLink="/tests/create" class="dropdown-item">
+            <i class="fas fa-plus"></i>
+            <span>Create Test</span>
+          </a>
+          <a routerLink="/tests" class="dropdown-item">
+            <i class="fas fa-list"></i>
+            <span>View All Tests</span>
+          </a>
+          <a routerLink="/tests/manage" class="dropdown-item">
+            <i class="fas fa-cog"></i>
+            <span>Manage Tests</span>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Projects CRUD Dropdown -->
+      <div class="nav-item dropdown" [class.open]="projectsDropdownOpen">
+        <button class="nav-link dropdown-toggle" (click)="toggleProjectsDropdown()">
+          <i class="fas fa-folder"></i>
+          <span *ngIf="!sidebarCollapsed">Projects</span>
+          <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down dropdown-arrow" 
+             [class.rotated]="projectsDropdownOpen"></i>
+        </button>
+        
+        <div class="dropdown-menu" *ngIf="projectsDropdownOpen && !sidebarCollapsed">
+          <a routerLink="/projects/create" class="dropdown-item">
+            <i class="fas fa-plus"></i>
+            <span>Create Project</span>
+          </a>
+          <a routerLink="/projects" class="dropdown-item">
+            <i class="fas fa-eye"></i>
+            <span>View Projects</span>
+          </a>
+          <a routerLink="/projects/manage" class="dropdown-item">
+            <i class="fas fa-edit"></i>
+            <span>Edit Projects</span>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Reports -->
+      <div class="nav-item">
+        <a routerLink="/reports" class="nav-link" routerLinkActive="active">
+          <i class="fas fa-chart-line"></i>
+          <span *ngIf="!sidebarCollapsed">Reports</span>
+        </a>
+      </div>
+      
+      <!-- Schedules -->
+      <div class="nav-item">
+        <a routerLink="/schedules" class="nav-link" routerLinkActive="active">
+          <i class="fas fa-calendar"></i>
+          <span *ngIf="!sidebarCollapsed">Schedules</span>
+        </a>
+      </div>
+      
+      <!-- Settings -->
+      <div class="nav-item">
+        <a routerLink="/settings" class="nav-link" routerLinkActive="active">
+          <i class="fas fa-cog"></i>
+          <span *ngIf="!sidebarCollapsed">Settings</span>
+        </a>
+      </div>
+    </nav>
+    
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="collapse-btn" (click)="toggleSidebar()">
+        <i class="fas" [class.fa-chevron-left]="!sidebarCollapsed" 
+           [class.fa-chevron-right]="sidebarCollapsed"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" (click)="toggleMobileSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h1>{{ pageTitle }}</h1>
+      </div>
+      
+      <div class="header-right">
+        <!-- Search Bar -->
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search..." [(ngModel)]="searchQuery">
+        </div>
+        
+        <!-- Notification Bell -->
+        <div class="notification-icon" [class.has-notifications]="notifications.length > 0" 
+             (click)="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <span *ngIf="notifications.length > 0" class="notification-count">{{notifications.length}}</span>
+        </div>
+        
+        <!-- User Menu -->
+        <div class="user-menu" [class.open]="userMenuOpen">
+          <button class="user-avatar" (click)="toggleUserMenu()">
+            <img src="user.jpg" alt="User Avatar">
+            <span>{{currentUser?.name}}</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          
+          <div class="user-dropdown" *ngIf="userMenuOpen">
+            <a href="#" class="dropdown-item">
+              <i class="fas fa-user"></i>
+              <span>Profile</span>
+            </a>
+            <a href="#" class="dropdown-item">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+            <hr class="dropdown-divider">
+            <button (click)="logout()" class="dropdown-item logout">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content (This is where individual pages will be rendered) -->
+    <div class="page-content">
+      <ng-content></ng-content>
+    </div>
+  </main>
+
+  <!-- Notification Panel -->
+  <div *ngIf="showNotifications" class="notification-panel">
+    <div class="notification-header">
+      <h3>Notifications</h3>
+      <button (click)="showNotifications = false" class="close-btn">×</button>
+    </div>
+    <div class="notification-list">
+      <div *ngFor="let notification of notifications" class="notification-item" [class]="notification.type">
+        <i class="fas" [class.fa-check-circle]="notification.type === 'success'" 
+           [class.fa-exclamation-triangle]="notification.type === 'warning'"
+           [class.fa-times-circle]="notification.type === 'error'"></i>
+        <div class="notification-content">
+          <p>{{notification.message}}</p>
+          <small>{{notification.timestamp | date:'short'}}</small>
+        </div>
+        <button (click)="dismissNotification(notification.id)" class="dismiss-btn">×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar Overlay -->
+  <div *ngIf="mobileSidebarOpen" class="mobile-overlay" (click)="closeMobileSidebar()"></div>
+</div>
