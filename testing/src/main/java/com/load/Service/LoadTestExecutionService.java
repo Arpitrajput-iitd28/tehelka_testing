@@ -2,9 +2,16 @@ package com.load.Service;
 
 import com.load.Model.LoadTestConfig;
 import com.load.Repository.LoadTestConfigRepository;
+
 import com.load.Model.CrudType; // Import your CrudType enum
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfWriter;
+import java.io.FileOutputStream;
+
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +37,22 @@ public class LoadTestExecutionService {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+
+
+    @Autowired
+    private ReportService reportService;
+
+
+
+    public void generatePdfReport(String reportText, String pdfPath) throws Exception {
+        Document document = new Document();
+        PdfWriter.getInstance(document, new FileOutputStream(pdfPath));
+        document.open();
+        document.add(new Paragraph(reportText));
+        document.close();
+    }
+
 
     public void executeTest(Long configId) {
         LoadTestConfig config = configRepository.findById(configId)
@@ -105,6 +128,8 @@ public class LoadTestExecutionService {
         }
     }
 
+    
+
     // Helper method to build HTTP request based on CRUD type
     private HttpRequest buildHttpRequest(String url, CrudType crudType, String requestBody) {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -131,28 +156,8 @@ public class LoadTestExecutionService {
 
         return builder.build();
     }
-
-    
-
     private void generateReport(LoadTestConfig config, int successCount, int errorCount, Map<Integer, Integer> statusCodes) {
-        // Example: Create a simple report string (could be HTML, JSON, etc.)
-        StringBuilder report = new StringBuilder();
-        report.append("Load Test Report\n");
-        report.append("================\n");
-        report.append("Test Name: ").append(config.getTestName()).append("\n");
-        report.append("Target URL: ").append(config.getTargetUrl()).append("\n");
-        report.append("Users: ").append(config.getNumUsers()).append("\n");
-        report.append("Duration (s): ").append(config.getTestDuration()).append("\n");
-        report.append("Successful Requests: ").append(successCount).append("\n");
-        report.append("Failed Requests: ").append(errorCount).append("\n");
-        report.append("Status Code Distribution:\n");
-        statusCodes.forEach((code, count) -> report.append("  ").append(code).append(": ").append(count).append("\n"));
-
-        // Save report to file or database
-        // For simplicity, just print it here
-        System.out.println(report.toString());
-
-        // In a real app, you would save the report to disk or database
-        // fileStorageService.storeReport(report.toString(), "report_" + config.getId() + ".txt");
+        reportService.generateAndSaveReport(config, successCount, errorCount, statusCodes);
     }
+
 }
