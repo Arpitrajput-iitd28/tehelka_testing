@@ -8,6 +8,6 @@ import lombok.Setter;
 @AllArgsConstructor
 
 public class FileInfo {
-    private String name;
+    private String customName;
     private long size;
 }

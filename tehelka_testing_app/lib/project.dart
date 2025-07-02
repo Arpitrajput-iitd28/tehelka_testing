@@ -21,7 +21,7 @@ class Project {
   Project(this.name, {this.file});
 
   factory Project.fromJson(Map<String, dynamic> json) {
-    return Project(json['customName']);
+    return Project(json['customName']?? json['name'] ?? '');
   }
 
   Map<String, dynamic> toJson() {
