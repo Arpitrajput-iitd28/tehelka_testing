@@ -37,7 +37,7 @@ public class FileStorageController {
     }
 
     @PostMapping("/upload")
-public ResponseEntity<Map<String, String>> handleFileUpload(
+    public ResponseEntity<Map<String, String>> handleFileUpload(
         @RequestParam("file") MultipartFile file,
         @RequestParam("customName") String customName) {
     try {
