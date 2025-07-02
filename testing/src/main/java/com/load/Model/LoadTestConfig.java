@@ -13,10 +13,7 @@ public class LoadTestConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(name = "test_name", nullable = false)
-    private String testName;
-    
+
     @Column(name = "target_url", nullable = false, length = 500)
     private String targetUrl;
     

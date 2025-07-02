@@ -45,7 +45,7 @@ public class ReportService {
         StringBuilder report = new StringBuilder();
         report.append("Load Test Report\n");
         report.append("================\n");
-        report.append("Test Name: ").append(config.getTestName()).append("\n");
+       
         report.append("Target URL: ").append(config.getTargetUrl()).append("\n");
         report.append("Users: ").append(config.getNumUsers()).append("\n");
         report.append("Duration (s): ").append(config.getTestDuration()).append("\n");
@@ -69,7 +69,7 @@ public class ReportService {
             // Build JSON (could use a DTO)
             StringBuilder json = new StringBuilder();
             json.append("{");
-            json.append("\"testName\":\"").append(config.getTestName()).append("\",");
+            
             json.append("\"targetUrl\":\"").append(config.getTargetUrl()).append("\",");
             json.append("\"users\":").append(config.getNumUsers()).append(",");
             json.append("\"duration\":").append(config.getTestDuration()).append(",");
