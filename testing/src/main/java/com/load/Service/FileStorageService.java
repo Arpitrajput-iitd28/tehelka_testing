@@ -28,25 +28,22 @@ public class FileStorageService {
     }
     
 
-    public String store(MultipartFile file) throws IOException {
+    public String store(MultipartFile file, String customName) throws IOException {
         if (file.isEmpty()) {
             throw new RuntimeException("No selected file");
         }
-
-        String filename = StringUtils.cleanPath(file.getOriginalFilename());
-        if (filename == null || filename.isEmpty()) {
-            throw new RuntimeException("No filename provided");
-        }
-
-        String extension = FilenameUtils.getExtension(filename).toLowerCase();
+    
+        String extension = FilenameUtils.getExtension(file.getOriginalFilename()).toLowerCase();
         if (!allowedExtensions.contains(extension)) {
             throw new RuntimeException("File type not allowed");
         }
-
+    
         if (file.getSize() > maxFileSize) {
             throw new RuntimeException("File size exceeds limit");
         }
-
+    
+        
+        String filename = StringUtils.cleanPath(customName) + "." + extension;
         Path destinationFile = uploadDir.resolve(filename);
         Files.copy(file.getInputStream(), destinationFile);
         return destinationFile.toString();

@@ -34,9 +34,9 @@ public class FileStorageController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,@RequestParam("customName") String customName) {
         try {
-            String filePath = fileStorageService.store(file);
+            String filePath = fileStorageService.store(file,customName);
             
             return ResponseEntity.ok("File uploaded: " + filePath);
         } catch (Exception e) {
