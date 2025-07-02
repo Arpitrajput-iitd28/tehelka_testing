@@ -4,8 +4,11 @@ package com.load.Controller;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,15 +37,24 @@ public class FileStorageController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,@RequestParam("customName") String customName) {
-        try {
-            String filePath = fileStorageService.store(file,customName);
-            
-            return ResponseEntity.ok("File uploaded: " + filePath);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to upload file: " + e.getMessage());
-        }
+public ResponseEntity<Map<String, String>> handleFileUpload(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("customName") String customName) {
+    try {
+        String filePath = fileStorageService.store(file, customName);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("customName", customName);
+        response.put("filePath", filePath);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    } catch (Exception e) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Failed to upload file: " + e.getMessage());
+        return ResponseEntity.internalServerError().body(error);
     }
+}
+
 
     @GetMapping("/uploads")
     public ResponseEntity<List<FileInfo>> listAllUploads() {
