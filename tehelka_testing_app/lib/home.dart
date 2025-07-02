@@ -72,6 +72,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshProjects() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+    try {
+      projects = await fetchProjects();
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

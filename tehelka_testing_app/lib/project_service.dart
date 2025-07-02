@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'project.dart'; // Your Project model
 import 'dart:io';
+import "home.dart";
 
 const String baseUrl = 'http://192.168.1.17:8080'; // Replace with your API base URL
 
@@ -31,6 +32,7 @@ Future<Project> createProject(String title, String filePath) async {
   var response = await http.Response.fromStream(streamedResponse);
 
   if (response.statusCode == 200 || response.statusCode == 201) {
+    fetchProjects(); 
     // Adjust according to your backend's response
     return Project.fromJson(jsonDecode(response.body));
   } else {
