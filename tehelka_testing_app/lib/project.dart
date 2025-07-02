@@ -21,10 +21,10 @@ class Project {
   Project(this.name, {this.file});
 
   factory Project.fromJson(Map<String, dynamic> json) {
-    return Project(json['name']);
+    return Project(json['customName']);
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name};
+    return {'customName': name};
   }
 }
