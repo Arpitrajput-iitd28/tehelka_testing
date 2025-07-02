@@ -7,7 +7,7 @@ const String baseUrl = 'http://192.168.1.17:8080'; // Replace with your API base
 
 Future<List<Project>> fetchProjects() async {
   final response = await http.get(Uri.parse('$baseUrl/api/load-tests/uploads'));
-  if (response.statusCode == 200) {
+  if (response.statusCode == 200 || response.statusCode == 201) {
     final List<dynamic> data = jsonDecode(response.body);
     return data.map((json) => Project.fromJson(json)).toList();
   } else {
@@ -30,7 +30,7 @@ Future<Project> createProject(String title, String filePath) async {
   var streamedResponse = await request.send();
   var response = await http.Response.fromStream(streamedResponse);
 
-  if (response.statusCode == 200) {
+  if (response.statusCode == 200 || response.statusCode == 201) {
     // Adjust according to your backend's response
     return Project.fromJson(jsonDecode(response.body));
   } else {

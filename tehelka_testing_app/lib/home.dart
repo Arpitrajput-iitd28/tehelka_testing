@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _addProject(String title, PlatformFile? pickedFile) async {
     try {
-      final newProject = await createProject(title, pickedFile?.name ?? '');
+      final newProject = await createProject(title, pickedFile?.path ?? '');
       setState(() {
         projects.add(newProject);
       });
