@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'project.dart'; // Your Project model
 import 'dart:io';
 import "home.dart";
+import "load_test_config_request.dart";
 
 const String baseUrl = 'http://192.168.1.17:8080'; // Replace with your API base URL
 
@@ -38,4 +39,19 @@ Future<Project> createProject(String title, String filePath) async {
   } else {
     throw Exception('Failed to create project: ${response.body}');
 }
+}
+
+Future<bool> scheduleLoadTest(LoadTestConfigRequest request) async {
+  final url = Uri.parse('$baseUrl/api/load-tests/config');
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode(request.toJson()),
+  );
+  if (response.statusCode == 200) {
+    // You can parse response.body if you want to use the returned config
+    return true;
+  } else {
+    throw Exception('Failed to schedule test: ${response.body}');
+  }
 }

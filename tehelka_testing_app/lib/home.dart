@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'project_service.dart'; // Your API functions
 import 'project.dart'; // Your Project model
+import 'load_test_config_request.dart';
+import 'project_service.dart';
+
 
 const Color kNavyBlue = Color(0xFF0A183D);
 const Color kCardColor = Color(0xFF162447);
@@ -629,7 +632,7 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () {
+          onPressed: () async {
             if (_allFieldsValid()) {
               if (scheduledDate != null && scheduledTime != null) {
                 final scheduledDateTime = DateTime(
@@ -639,26 +642,27 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
                   scheduledTime!.hour,
                   scheduledTime!.minute,
                 );
-                if (scheduledDateTime.isBefore(DateTime.now())) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cannot schedule test in the past.')),
-                  );
-                  return;
-                }
-                widget.onRun(scheduledDateTime, {
-                  'Operation': selectedCrud,
-                  'Users': usersController.text,
-                  'Target URL': urlController.text,
-                  'Ramp-up Period (sec)': rampUpController.text,
-                  'Test Period (min)': testPeriodController.text,
-                  if (showAdvanced && loopController.text.isNotEmpty) 'Loop': loopController.text,
-                  if (showAdvanced && assertionController.text.isNotEmpty) 'Assertion': assertionController.text,
-                  if (showAdvanced && testDataController.text.isNotEmpty) 'Test Data': testDataController.text,
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Test scheduled!')),
+
+                final request = LoadTestConfigRequest(
+                  testName: widget.project.name,
+                  targetUrl: urlController.text,
+                  numUsers: int.parse(usersController.text),
+                  rampUpPeriod: int.parse(rampUpController.text),
+                  testDuration: int.parse(testPeriodController.text),
+                  scheduledExecutionTime: scheduledDateTime.toIso8601String(),
                 );
+
+                try {
+                  await scheduleLoadTest(request);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Test scheduled (backend)!')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to schedule: $e')),
+                  );
+                }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please select both date and time.')),
