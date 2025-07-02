@@ -121,4 +121,8 @@ export class LayoutComponent implements OnInit {
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
 }

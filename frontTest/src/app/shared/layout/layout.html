@@ -1,16 +1,21 @@
 <div class="app-layout">
   <!-- Sidebar -->
-  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed" [class.mobile-open]="mobileSidebarOpen">
     <div class="sidebar-header">
-      <img src="StressBenchLogo.PNG" alt="StressBench" class="sidebar-logo">
-      <span *ngIf="!sidebarCollapsed" class="sidebar-title">StressBench</span>
+      <div class="header-content" (click)="navigateToDashboard()">
+        <img src="SpeedBenchLogo.png" alt="StressBench" class="sidebar-logo">
+        <span *ngIf="!sidebarCollapsed" class="sidebar-title">StressBench</span>
+      </div>
+      <button class="sidebar-toggle-btn" (click)="toggleSidebar()">
+        <img src="collapse.png" alt="Collapse" class="collapse-icon">
+      </button>
     </div>
     
     <nav class="sidebar-nav">
       <!-- Dashboard -->
       <div class="nav-item">
         <a routerLink="/dashboard" class="nav-link" routerLinkActive="active">
-          <i class="fas fa-tachometer-alt"></i>
+          <img src="dashboard.png" alt="Dashboard" class="nav-icon">
           <span *ngIf="!sidebarCollapsed">Dashboard</span>
         </a>
       </div>
@@ -18,7 +23,7 @@
       <!-- Tests CRUD Dropdown -->
       <div class="nav-item dropdown" [class.open]="testsDropdownOpen">
         <button class="nav-link dropdown-toggle" (click)="toggleTestsDropdown()">
-          <i class="fas fa-vial"></i>
+          <img src="tests.png" alt="Tests" class="nav-icon">
           <span *ngIf="!sidebarCollapsed">Tests</span>
           <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down dropdown-arrow" 
              [class.rotated]="testsDropdownOpen"></i>
@@ -26,15 +31,15 @@
         
         <div class="dropdown-menu" *ngIf="testsDropdownOpen && !sidebarCollapsed">
           <a routerLink="/tests/create" class="dropdown-item">
-            <i class="fas fa-plus"></i>
+            <img src="create.png" alt="Create" class="dropdown-icon">
             <span>Create Test</span>
           </a>
           <a routerLink="/tests" class="dropdown-item">
-            <i class="fas fa-list"></i>
+            <img src="view.png" alt="View" class="dropdown-icon">
             <span>View All Tests</span>
           </a>
           <a routerLink="/tests/manage" class="dropdown-item">
-            <i class="fas fa-cog"></i>
+            <img src="manage.png" alt="Manage" class="dropdown-icon">
             <span>Manage Tests</span>
           </a>
         </div>
@@ -43,7 +48,7 @@
       <!-- Projects CRUD Dropdown -->
       <div class="nav-item dropdown" [class.open]="projectsDropdownOpen">
         <button class="nav-link dropdown-toggle" (click)="toggleProjectsDropdown()">
-          <i class="fas fa-folder"></i>
+          <img src="projects.png" alt="Projects" class="nav-icon">
           <span *ngIf="!sidebarCollapsed">Projects</span>
           <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down dropdown-arrow" 
              [class.rotated]="projectsDropdownOpen"></i>
@@ -51,15 +56,15 @@
         
         <div class="dropdown-menu" *ngIf="projectsDropdownOpen && !sidebarCollapsed">
           <a routerLink="/projects/create" class="dropdown-item">
-            <i class="fas fa-plus"></i>
+            <img src="create.png" alt="Create" class="dropdown-icon">
             <span>Create Project</span>
           </a>
           <a routerLink="/projects" class="dropdown-item">
-            <i class="fas fa-eye"></i>
+            <img src="view.png" alt="View" class="dropdown-icon">
             <span>View Projects</span>
           </a>
           <a routerLink="/projects/manage" class="dropdown-item">
-            <i class="fas fa-edit"></i>
+            <img src="manage.png" alt="Manage" class="dropdown-icon">
             <span>Edit Projects</span>
           </a>
         </div>
@@ -68,7 +73,7 @@
       <!-- Reports -->
       <div class="nav-item">
         <a routerLink="/reports" class="nav-link" routerLinkActive="active">
-          <i class="fas fa-chart-line"></i>
+          <img src="reports.png" alt="Reports" class="nav-icon">
           <span *ngIf="!sidebarCollapsed">Reports</span>
         </a>
       </div>
@@ -76,7 +81,7 @@
       <!-- Schedules -->
       <div class="nav-item">
         <a routerLink="/schedules" class="nav-link" routerLinkActive="active">
-          <i class="fas fa-calendar"></i>
+          <img src="schedule.png" alt="Schedules" class="nav-icon">
           <span *ngIf="!sidebarCollapsed">Schedules</span>
         </a>
       </div>
@@ -84,19 +89,11 @@
       <!-- Settings -->
       <div class="nav-item">
         <a routerLink="/settings" class="nav-link" routerLinkActive="active">
-          <i class="fas fa-cog"></i>
+          <img src="settings.png" alt="Settings" class="nav-icon">
           <span *ngIf="!sidebarCollapsed">Settings</span>
         </a>
       </div>
     </nav>
-    
-    <!-- Sidebar Footer -->
-    <div class="sidebar-footer">
-      <button class="collapse-btn" (click)="toggleSidebar()">
-        <i class="fas" [class.fa-chevron-left]="!sidebarCollapsed" 
-           [class.fa-chevron-right]="sidebarCollapsed"></i>
-      </button>
-    </div>
   </aside>
 
   <!-- Main Content Area -->
@@ -113,37 +110,39 @@
       <div class="header-right">
         <!-- Search Bar -->
         <div class="search-container">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search..." [(ngModel)]="searchQuery">
+            <img src="search.png" alt="Search" class="search-icon-img">
+            <input type="text" placeholder="Search..." [(ngModel)]="searchQuery">
         </div>
         
         <!-- Notification Bell -->
         <div class="notification-icon" [class.has-notifications]="notifications.length > 0" 
-             (click)="toggleNotifications()">
-          <i class="fas fa-bell"></i>
-          <span *ngIf="notifications.length > 0" class="notification-count">{{notifications.length}}</span>
+            (click)="toggleNotifications()">
+            <div class="notification-bell-container">
+                <img src="notif.png" alt="Notifications" class="notification-bell-img" >
+                <span *ngIf="notifications.length > 0" class="notification-badge">{{notifications.length}}</span>
+            </div>
         </div>
         
         <!-- User Menu -->
         <div class="user-menu" [class.open]="userMenuOpen">
           <button class="user-avatar" (click)="toggleUserMenu()">
-            <img src="user.jpg" alt="User Avatar">
-            <span>{{currentUser?.name}}</span>
+            <img src="userav.png" alt="User Avatar">
+            <span>{{currentUser.name}}</span>
             <i class="fas fa-chevron-down"></i>
           </button>
           
           <div class="user-dropdown" *ngIf="userMenuOpen">
-            <a href="#" class="dropdown-item">
-              <i class="fas fa-user"></i>
+            <a routerLink="/profile" class="dropdown-item">
+              <img src="profile.png" alt="Profile" class="menu-icon">
               <span>Profile</span>
             </a>
-            <a href="#" class="dropdown-item">
-              <i class="fas fa-cog"></i>
+            <a routerLink="/settings" class="dropdown-item">
+              <img src="settings.png" alt="Settings" class="menu-icon">
               <span>Settings</span>
             </a>
             <hr class="dropdown-divider">
             <button (click)="logout()" class="dropdown-item logout">
-              <i class="fas fa-sign-out-alt"></i>
+              <img src="logout.png" alt="Logout" class="menu-icon">
               <span>Logout</span>
             </button>
           </div>
@@ -151,7 +150,7 @@
       </div>
     </header>
 
-    <!-- Page Content (This is where individual pages will be rendered) -->
+    <!-- Page Content -->
     <div class="page-content">
       <ng-content></ng-content>
     </div>
@@ -160,7 +159,13 @@
   <!-- Notification Panel -->
   <div *ngIf="showNotifications" class="notification-panel">
     <div class="notification-header">
-      <h3>Notifications</h3>
+      <div class="notification-title">
+        <div class="notification-icon-container">
+          <img src="notif1.png" alt="Notifications" class="notification-icon-img">
+          <span *ngIf="notifications.length > 0" class="notification-dot"></span>
+        </div>
+        <h3>Notifications</h3>
+      </div>
       <button (click)="showNotifications = false" class="close-btn">×</button>
     </div>
     <div class="notification-list">
@@ -173,6 +178,12 @@
           <small>{{notification.timestamp | date:'short'}}</small>
         </div>
         <button (click)="dismissNotification(notification.id)" class="dismiss-btn">×</button>
+      </div>
+      <!-- Placeholder when no notifications -->
+      <div *ngIf="notifications.length === 0" class="no-notifications">
+        <img src="nonotif.png" alt="No notifications">
+        <p>No new notifications</p>
+        <small>You're all caught up!</small>
       </div>
     </div>
   </div>
