@@ -66,7 +66,7 @@ public class FileStorageController {
             for (File file : files) {
                 if (file.isFile()) {
                     String fileName = file.getName();
-                // Remove extension for customName
+                
                 String customName = fileName.contains(".") 
                     ? fileName.substring(0, fileName.lastIndexOf('.'))
                     : fileName;
