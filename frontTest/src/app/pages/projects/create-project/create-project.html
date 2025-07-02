@@ -1,0 +1,270 @@
+<app-layout pageTitle="Create Project">
+  <div class="create-project-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Create New Project</h1>
+        <p>Set up a new project to organize your load tests and manage team access</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" routerLink="/projects">
+          <i class="fas fa-arrow-left"></i>
+          Back to Projects
+        </button>
+      </div>
+    </div>
+
+    <!-- Project Configuration Form -->
+    <div class="form-container">
+      <form [formGroup]="createProjectForm" (ngSubmit)="createProject()" class="project-form">
+        
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h2>Basic Information</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="projectName">Project Name *</label>
+              <input type="text" id="projectName" formControlName="projectName" 
+                     placeholder="Enter project name" class="form-input">
+              <div *ngIf="createProjectForm.get('projectName')?.invalid && createProjectForm.get('projectName')?.touched" 
+                   class="error-message">
+                Project name is required
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="projectKey">Project Key *</label>
+              <input type="text" id="projectKey" formControlName="projectKey" 
+                     placeholder="e.g., ECOM, AUTH, PAY" class="form-input"
+                     (input)="onProjectKeyChange()">
+              <small>Unique identifier for this project (3-10 characters, uppercase)</small>
+              <div *ngIf="createProjectForm.get('projectKey')?.invalid && createProjectForm.get('projectKey')?.touched" 
+                   class="error-message">
+                Project key is required and must be 3-10 uppercase characters
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" formControlName="description" 
+                      placeholder="Describe the purpose and scope of this project" 
+                      class="form-textarea" rows="3"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Category</label>
+              <select id="category" formControlName="category" class="form-select">
+                <option value="">Select category</option>
+                <option value="web-application">Web Application</option>
+                <option value="mobile-app">Mobile Application</option>
+                <option value="api-service">API Service</option>
+                <option value="microservice">Microservice</option>
+                <option value="database">Database</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="priority">Priority</label>
+              <select id="priority" formControlName="priority" class="form-select">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Environment Configuration -->
+        <div class="form-section">
+          <h2>Environment Configuration</h2>
+          <div class="environments-container">
+            <div class="environment-header">
+              <p>Configure the environments where tests will be executed</p>
+              <button type="button" class="btn-outline" (click)="addEnvironment()">
+                <i class="fas fa-plus"></i>
+                Add Environment
+              </button>
+            </div>
+            
+            <div class="environments-list" formArrayName="environments">
+              <div *ngFor="let env of environments.controls; let i = index" 
+                   [formGroupName]="i" class="environment-item">
+                <div class="environment-header-item">
+                  <h4>Environment {{i + 1}}</h4>
+                  <button type="button" class="btn-delete-env" (click)="removeEnvironment(i)"
+                          [disabled]="environments.length === 1">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Environment Name *</label>
+                    <input type="text" formControlName="name" 
+                           placeholder="e.g., Development, Staging, Production" class="form-input">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Base URL *</label>
+                    <input type="url" formControlName="baseUrl" 
+                           placeholder="https://api.example.com" class="form-input">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Description</label>
+                  <input type="text" formControlName="description" 
+                         placeholder="Environment description" class="form-input">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team & Access -->
+        <div class="form-section">
+          <h2>Team & Access</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="projectLead">Project Lead</label>
+              <select id="projectLead" formControlName="projectLead" class="form-select">
+                <option value="">Select project lead</option>
+                <option value="john.doe@company.com">John Doe</option>
+                <option value="jane.smith@company.com">Jane Smith</option>
+                <option value="mike.wilson@company.com">Mike Wilson</option>
+                <option value="sarah.jones@company.com">Sarah Jones</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="visibility">Visibility</label>
+              <select id="visibility" formControlName="visibility" class="form-select">
+                <option value="private">Private - Only team members</option>
+                <option value="internal">Internal - All company users</option>
+                <option value="public">Public - Anyone with link</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Team Members</label>
+            <div class="team-members-section">
+              <div class="member-input">
+                <input type="email" [(ngModel)]="newMemberEmail" [ngModelOptions]="{standalone: true}"
+                       placeholder="Enter email address" class="form-input">
+                <select [(ngModel)]="newMemberRole" [ngModelOptions]="{standalone: true}" class="form-select">
+                  <option value="viewer">Viewer</option>
+                  <option value="tester">Tester</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button type="button" class="btn-outline" (click)="addTeamMember()">
+                  <i class="fas fa-plus"></i>
+                  Add
+                </button>
+              </div>
+              
+              <div class="team-members-list">
+                <div *ngFor="let member of teamMembers; let i = index" class="team-member-item">
+                  <div class="member-info">
+                    <span class="member-email">{{member.email}}</span>
+                    <span class="member-role" [class]="'role-' + member.role">{{member.role | titlecase}}</span>
+                  </div>
+                  <button type="button" class="btn-remove-member" (click)="removeTeamMember(i)">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="form-section">
+          <h2>Notification Settings</h2>
+          <div class="notification-options">
+            <div class="notification-option">
+              <input type="checkbox" id="emailNotifications" formControlName="emailNotifications">
+              <label for="emailNotifications">Email Notifications</label>
+              <small>Receive email alerts for test completions and failures</small>
+            </div>
+            
+            <div class="notification-option">
+              <input type="checkbox" id="slackNotifications" formControlName="slackNotifications">
+              <label for="slackNotifications">Slack Notifications</label>
+              <small>Send notifications to Slack channel</small>
+            </div>
+            
+            <div class="notification-option" *ngIf="createProjectForm.get('slackNotifications')?.value">
+              <label for="slackWebhook">Slack Webhook URL</label>
+              <input type="url" id="slackWebhook" formControlName="slackWebhook" 
+                     placeholder="https://hooks.slack.com/..." class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="form-section">
+          <h2>Advanced Settings</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="defaultTestDuration">Default Test Duration (minutes)</label>
+              <input type="number" id="defaultTestDuration" formControlName="defaultTestDuration" 
+                     placeholder="5" class="form-input" min="1" max="1440">
+            </div>
+            
+            <div class="form-group">
+              <label for="maxConcurrentTests">Max Concurrent Tests</label>
+              <input type="number" id="maxConcurrentTests" formControlName="maxConcurrentTests" 
+                     placeholder="3" class="form-input" min="1" max="10">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="retentionPeriod">Data Retention Period (days)</label>
+              <select id="retentionPeriod" formControlName="retentionPeriod" class="form-select">
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+                <option value="90" selected>90 days</option>
+                <option value="180">180 days</option>
+                <option value="365">1 year</option>
+                <option value="-1">Unlimited</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="autoCleanup">Auto Cleanup</label>
+              <select id="autoCleanup" formControlName="autoCleanup" class="form-select">
+                <option value="false">Disabled</option>
+                <option value="true">Enabled</option>
+              </select>
+              <small>Automatically delete old test results based on retention period</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" routerLink="/projects">
+            Cancel
+          </button>
+          <button type="button" class="btn-outline" (click)="saveAsDraft()">
+            Save as Draft
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="createProjectForm.invalid || isCreating">
+            <span *ngIf="!isCreating">Create Project</span>
+            <span *ngIf="isCreating">
+              <i class="fas fa-spinner fa-spin"></i>
+              Creating Project...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</app-layout>

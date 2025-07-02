@@ -2,10 +2,15 @@
   <!-- Sidebar -->
   <aside class="sidebar" [class.collapsed]="sidebarCollapsed" [class.mobile-open]="mobileSidebarOpen">
     <div class="sidebar-header">
-      <div class="header-content" (click)="navigateToDashboard()">
-        <img src="SpeedBenchLogo.png" alt="StressBench" class="sidebar-logo">
-        <span *ngIf="!sidebarCollapsed" class="sidebar-title">StressBench</span>
-      </div>
+      <!-- Only show header content when NOT collapsed -->
+      <ng-container *ngIf="!sidebarCollapsed">
+        <div class="header-content" (click)="navigateToDashboard()">
+          <img src="SpeedBenchLogo.png" alt="StressBench" class="sidebar-logo">
+          <span class="sidebar-title">StressBench</span>
+        </div>
+      </ng-container>
+      
+      <!-- Collapse button - always visible -->
       <button class="sidebar-toggle-btn" (click)="toggleSidebar()">
         <img src="collapse.png" alt="Collapse" class="collapse-icon">
       </button>
@@ -16,65 +21,108 @@
       <div class="nav-item">
         <a routerLink="/dashboard" class="nav-link" routerLinkActive="active">
           <img src="dashboard.png" alt="Dashboard" class="nav-icon">
-          <span *ngIf="!sidebarCollapsed">Dashboard</span>
+          <span *ngIf="!sidebarCollapsed" class="nav-label">Dashboard</span>
         </a>
       </div>
       
       <!-- Tests CRUD Dropdown -->
-      <div class="nav-item dropdown" [class.open]="testsDropdownOpen">
-        <button class="nav-link dropdown-toggle" (click)="toggleTestsDropdown()">
-          <img src="tests.png" alt="Tests" class="nav-icon">
-          <span *ngIf="!sidebarCollapsed">Tests</span>
-          <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down dropdown-arrow" 
-             [class.rotated]="testsDropdownOpen"></i>
-        </button>
-        
-        <div class="dropdown-menu" *ngIf="testsDropdownOpen && !sidebarCollapsed">
-          <a routerLink="/tests/create" class="dropdown-item">
-            <img src="create.png" alt="Create" class="dropdown-icon">
-            <span>Create Test</span>
-          </a>
-          <a routerLink="/tests" class="dropdown-item">
-            <img src="view.png" alt="View" class="dropdown-icon">
-            <span>View All Tests</span>
-          </a>
-          <a routerLink="/tests/manage" class="dropdown-item">
-            <img src="manage.png" alt="Manage" class="dropdown-icon">
-            <span>Manage Tests</span>
-          </a>
+        <div class="nav-item dropdown-container" [class.open]="testsDropdownOpen">
+            <button class="nav-link dropdown-toggle" (click)="toggleTestsDropdown()" #testsButton>
+                <img src="tests.png" alt="Tests" class="nav-icon">
+                <span *ngIf="!sidebarCollapsed" class="nav-label">Tests</span>
+                <img *ngIf="!sidebarCollapsed" src="dropdown.png" alt="Dropdown" class="dropdown-icon" 
+                    [class.rotated]="testsDropdownOpen">
+            </button>
+            
+            <!-- Normal dropdown for expanded sidebar -->
+            <div class="dropdown-menu" *ngIf="testsDropdownOpen && !sidebarCollapsed" 
+                [style.height]="testsDropdownOpen && !sidebarCollapsed ? 'auto' : '0'">
+                <a routerLink="/tests/create" class="dropdown-item">
+                    <img src="createtest.png" alt="Create" class="dropdown-item-icon">
+                    <span>Create Test</span>
+                </a>
+                <a routerLink="/tests" class="dropdown-item">
+                    <img src="viewtest.webp" alt="View" class="dropdown-item-icon">
+                    <span>View All Tests</span>
+                </a>
+                <a routerLink="/tests/manage" class="dropdown-item">
+                    <img src="managetest.png" alt="Manage" class="dropdown-item-icon">
+                    <span>Manage Tests</span>
+                </a>
+            </div>
+            
+            <!-- Tooltip dropdown for collapsed sidebar -->
+            <div class="tooltip-dropdown" *ngIf="testsDropdownOpen && sidebarCollapsed" 
+                [style.top.px]="getButtonPosition('tests')">
+                <div class="tooltip-content">
+                    <span class="tooltip-title">Tests</span>
+                    <a routerLink="/tests/create" class="tooltip-link">
+                        <img src="createtest.png" alt="Create" class="tooltip-icon">
+                        <span>Create Test</span>
+                    </a>
+                    <a routerLink="/tests" class="tooltip-link">
+                        <img src="viewtest.webp" alt="View" class="tooltip-icon">
+                        <span>View All Tests</span>
+                    </a>
+                    <a routerLink="/tests/manage" class="tooltip-link">
+                        <img src="managetest.png" alt="Manage" class="tooltip-icon">
+                        <span>Manage Tests</span>
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
       
       <!-- Projects CRUD Dropdown -->
-      <div class="nav-item dropdown" [class.open]="projectsDropdownOpen">
-        <button class="nav-link dropdown-toggle" (click)="toggleProjectsDropdown()">
-          <img src="projects.png" alt="Projects" class="nav-icon">
-          <span *ngIf="!sidebarCollapsed">Projects</span>
-          <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down dropdown-arrow" 
-             [class.rotated]="projectsDropdownOpen"></i>
-        </button>
-        
-        <div class="dropdown-menu" *ngIf="projectsDropdownOpen && !sidebarCollapsed">
-          <a routerLink="/projects/create" class="dropdown-item">
-            <img src="create.png" alt="Create" class="dropdown-icon">
-            <span>Create Project</span>
-          </a>
-          <a routerLink="/projects" class="dropdown-item">
-            <img src="view.png" alt="View" class="dropdown-icon">
-            <span>View Projects</span>
-          </a>
-          <a routerLink="/projects/manage" class="dropdown-item">
-            <img src="manage.png" alt="Manage" class="dropdown-icon">
-            <span>Edit Projects</span>
-          </a>
+        <div class="nav-item dropdown-container" [class.open]="projectsDropdownOpen">
+            <button class="nav-link dropdown-toggle" (click)="toggleProjectsDropdown()">
+                <img src="projects.png" alt="Projects" class="nav-icon">
+                <span *ngIf="!sidebarCollapsed" class="nav-label">Projects</span>
+                <img *ngIf="!sidebarCollapsed" src="dropdown.png" alt="Dropdown" class="dropdown-icon" 
+                    [class.rotated]="projectsDropdownOpen">
+            </button>
+    
+            <!-- Normal dropdown for expanded sidebar -->
+            <div class="dropdown-menu" *ngIf="projectsDropdownOpen && !sidebarCollapsed" 
+                [style.height]="projectsDropdownOpen && !sidebarCollapsed ? 'auto' : '0'">
+                <a routerLink="/projects/create" class="dropdown-item">
+                <img src="createtest.png" alt="Create" class="dropdown-item-icon">
+                <span>Create Project</span>
+                </a>
+                <a routerLink="/projects" class="dropdown-item">
+                <img src="viewtest.webp" alt="View" class="dropdown-item-icon">
+                <span>View Projects</span>
+                </a>
+                <a routerLink="/projects/manage" class="dropdown-item">
+                <img src="managetest.png" alt="Manage" class="dropdown-item-icon">
+                <span>Edit Projects</span>
+                </a>
+            </div>
+    
+            <!-- Tooltip dropdown for collapsed sidebar -->
+            <div class="tooltip-dropdown" *ngIf="projectsDropdownOpen && sidebarCollapsed">
+                <div class="tooltip-content">
+                <span class="tooltip-title">Projects</span>
+                <a routerLink="/projects/create" class="tooltip-link">
+                    <img src="createtest.png" alt="Create" class="tooltip-icon">
+                    <span>Create Project</span>
+                </a>
+                <a routerLink="/projects" class="tooltip-link">
+                    <img src="viewtest.webp" alt="View" class="tooltip-icon">
+                    <span>View Projects</span>
+                </a>
+                <a routerLink="/projects/manage" class="tooltip-link">
+                    <img src="managetest.png" alt="Manage" class="tooltip-icon">
+                    <span>Edit Projects</span>
+                </a>
+                </div>
+            </div>
         </div>
-      </div>
       
       <!-- Reports -->
       <div class="nav-item">
         <a routerLink="/reports" class="nav-link" routerLinkActive="active">
           <img src="reports.png" alt="Reports" class="nav-icon">
-          <span *ngIf="!sidebarCollapsed">Reports</span>
+          <span *ngIf="!sidebarCollapsed" class="nav-label">Reports</span>
         </a>
       </div>
       
@@ -82,7 +130,7 @@
       <div class="nav-item">
         <a routerLink="/schedules" class="nav-link" routerLinkActive="active">
           <img src="schedule.png" alt="Schedules" class="nav-icon">
-          <span *ngIf="!sidebarCollapsed">Schedules</span>
+          <span *ngIf="!sidebarCollapsed" class="nav-label">Schedules</span>
         </a>
       </div>
       
@@ -90,7 +138,7 @@
       <div class="nav-item">
         <a routerLink="/settings" class="nav-link" routerLinkActive="active">
           <img src="settings.png" alt="Settings" class="nav-icon">
-          <span *ngIf="!sidebarCollapsed">Settings</span>
+          <span *ngIf="!sidebarCollapsed" class="nav-label">Settings</span>
         </a>
       </div>
     </nav>

@@ -1,0 +1,229 @@
+<app-layout pageTitle="Create Test">
+  <div class="create-test-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Create New Load Test</h1>
+        <p>Configure and launch a new performance test for your application</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" routerLink="/tests">
+          <i class="fas fa-arrow-left"></i>
+          Back to Tests
+        </button>
+      </div>
+    </div>
+
+    <!-- Test Configuration Form -->
+    <div class="form-container">
+      <form [formGroup]="createTestForm" (ngSubmit)="createTest()" class="test-form">
+        
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h2>Basic Information</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="testName">Test Name *</label>
+              <input type="text" id="testName" formControlName="testName" 
+                     placeholder="Enter test name" class="form-input">
+              <div *ngIf="createTestForm.get('testName')?.invalid && createTestForm.get('testName')?.touched" 
+                   class="error-message">
+                Test name is required
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="projectName">Project Name *</label>
+              <select id="projectName" formControlName="projectName" class="form-select">
+                <option value="">Select a project</option>
+                <option value="ecommerce">E-commerce API</option>
+                <option value="dashboard">Dashboard UI</option>
+                <option value="auth">Authentication Service</option>
+                <option value="payment">Payment System</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" formControlName="description" 
+                      placeholder="Describe what this test will validate" 
+                      class="form-textarea" rows="3"></textarea>
+          </div>
+        </div>
+
+        <!-- Test Configuration -->
+        <div class="form-section">
+          <h2>Test Configuration</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="testType">Test Type *</label>
+              <select id="testType" formControlName="testType" class="form-select">
+                <option value="">Select test type</option>
+                <option value="load">Load Test</option>
+                <option value="stress">Stress Test</option>
+                <option value="spike">Spike Test</option>
+                <option value="volume">Volume Test</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="targetUrl">Target URL *</label>
+              <input type="url" id="targetUrl" formControlName="targetUrl" 
+                     placeholder="https://api.example.com" class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="virtualUsers">Virtual Users *</label>
+              <input type="number" id="virtualUsers" formControlName="virtualUsers" 
+                     placeholder="Number of concurrent users" class="form-input" min="1" max="10000">
+            </div>
+            
+            <div class="form-group">
+              <label for="duration">Duration (minutes) *</label>
+              <input type="number" id="duration" formControlName="duration" 
+                     placeholder="Test duration" class="form-input" min="1" max="1440">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rampUpTime">Ramp-up Time (seconds)</label>
+              <input type="number" id="rampUpTime" formControlName="rampUpTime" 
+                     placeholder="Time to reach full load" class="form-input" min="0">
+            </div>
+            
+            <div class="form-group">
+              <label for="thinkTime">Think Time (seconds)</label>
+              <input type="number" id="thinkTime" formControlName="thinkTime" 
+                     placeholder="Delay between requests" class="form-input" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Test Script -->
+        <div class="form-section">
+          <h2>Test Script</h2>
+          <div class="script-options">
+            <div class="script-option">
+              <input type="radio" id="uploadScript" name="scriptType" value="upload" 
+                     (change)="onScriptTypeChange('upload')">
+              <label for="uploadScript">Upload Test Script</label>
+            </div>
+            <div class="script-option">
+              <input type="radio" id="githubScript" name="scriptType" value="github" 
+                     (change)="onScriptTypeChange('github')">
+              <label for="githubScript">Load from GitHub</label>
+            </div>
+            <div class="script-option">
+              <input type="radio" id="simpleScript" name="scriptType" value="simple" 
+                     (change)="onScriptTypeChange('simple')" checked>
+              <label for="simpleScript">Simple HTTP Test</label>
+            </div>
+          </div>
+          
+          <div class="script-content" [ngSwitch]="selectedScriptType">
+            <div *ngSwitchCase="'upload'" class="file-upload-section">
+              <div class="file-upload-area" (click)="fileInput.click()" 
+                   (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+                <input #fileInput type="file" (change)="onFileSelected($event)" 
+                       accept=".jmx,.js,.yaml,.yml" style="display: none;">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Click to upload or drag and drop</p>
+                <small>Supported formats: JMX, JS, YAML</small>
+              </div>
+              <div *ngIf="selectedFile" class="selected-file">
+                <i class="fas fa-file"></i>
+                <span>{{selectedFile.name}}</span>
+                <button type="button" (click)="removeFile()" class="remove-file-btn">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div *ngSwitchCase="'github'" class="github-section">
+              <div class="form-group">
+                <label for="githubUrl">GitHub Repository URL</label>
+                <input type="url" id="githubUrl" formControlName="githubUrl" 
+                       placeholder="https://github.com/username/repo" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="scriptPath">Script Path</label>
+                <input type="text" id="scriptPath" formControlName="scriptPath" 
+                       placeholder="path/to/test-script.jmx" class="form-input">
+              </div>
+            </div>
+            
+            <div *ngSwitchDefault class="simple-test-section">
+              <div class="form-group">
+                <label for="httpMethod">HTTP Method</label>
+                <select id="httpMethod" formControlName="httpMethod" class="form-select">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="requestHeaders">Request Headers (JSON)</label>
+                <textarea id="requestHeaders" formControlName="requestHeaders" 
+                          placeholder='{"Content-Type": "application/json"}' 
+                          class="form-textarea" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="requestBody">Request Body</label>
+                <textarea id="requestBody" formControlName="requestBody" 
+                          placeholder="Request payload (for POST/PUT requests)" 
+                          class="form-textarea" rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scheduling -->
+        <div class="form-section">
+          <h2>Scheduling</h2>
+          <div class="schedule-options">
+            <div class="schedule-option">
+              <input type="radio" id="runNow" name="scheduleType" value="now" 
+                     (change)="onScheduleTypeChange('now')" checked>
+              <label for="runNow">Run Immediately</label>
+            </div>
+            <div class="schedule-option">
+              <input type="radio" id="scheduleTest" name="scheduleType" value="scheduled" 
+                     (change)="onScheduleTypeChange('scheduled')">
+              <label for="scheduleTest">Schedule for Later</label>
+            </div>
+          </div>
+          
+          <div *ngIf="selectedScheduleType === 'scheduled'" class="schedule-datetime">
+            <div class="form-group">
+              <label for="scheduleTime">Schedule Date & Time</label>
+              <input type="datetime-local" id="scheduleTime" formControlName="scheduleTime" 
+                     class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" routerLink="/tests">
+            Cancel
+          </button>
+          <button type="button" class="btn-outline" (click)="saveAsDraft()">
+            Save as Draft
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="createTestForm.invalid || isCreating">
+            <span *ngIf="!isCreating">Create & Run Test</span>
+            <span *ngIf="isCreating">
+              <i class="fas fa-spinner fa-spin"></i>
+              Creating Test...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</app-layout>
