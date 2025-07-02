@@ -11,7 +11,7 @@ import lombok.Setter;
 
 
 public class LoadTestConfigRequest {
-    private String testName;
+   
     private String targetUrl;
     private int numUsers;
     private int rampUpPeriod; // in seconds
