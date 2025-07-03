@@ -30,6 +30,9 @@ environment:
 dependencies:
   file_picker: ^6.1.1
   http: ^0.13.5
+  dio: ^5.0.0
+  path_provider: ^2.0.0
+  open_file: ^3.2.1
   flutter:
     sdk: flutter
 

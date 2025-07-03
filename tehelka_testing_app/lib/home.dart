@@ -1,10 +1,11 @@
+// lib/home.dart
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'project_service.dart'; // Your API functions
-import 'project.dart'; // Your Project model
-import 'load_test_config_request.dart';
 import 'project_service.dart';
-
+import 'project.dart';
+import 'load_test_config_request.dart';
+import 'history_screen.dart';
 
 const Color kNavyBlue = Color(0xFF0A183D);
 const Color kCardColor = Color(0xFF162447);
@@ -14,7 +15,7 @@ const Color kButtonColor = Color(0xFF324A7D);
 class ScheduledTest {
   final String projectName;
   final DateTime scheduledDateTime;
-  final Map<String, String> parameters;
+  final Map<String, dynamic> parameters;
 
   ScheduledTest({
     required this.projectName,
@@ -75,24 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _refreshProjects() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-    try {
-      projects = await fetchProjects();
-      setState(() {
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           _navButton(Icons.history, 'History', _openHistory),
                           _navButton(Icons.add_circle, 'Create', _showCreateDialog),
-                          _navButton(Icons.notifications, 'Notif', _openNotifications),
                         ],
                       ),
                     ),
@@ -376,15 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openHistory() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('History feature coming soon!')),
-    );
-  }
-
-  void _openNotifications() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notifications feature coming soon!')),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => HistoryScreen()));
   }
 
   void _showParameterPrompt(Project project) {
@@ -392,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => _ParameterPromptDialog(
         project: project,
-        onRun: (DateTime scheduledDateTime, Map<String, String> params) {
+        onRun: (DateTime scheduledDateTime, Map<String, dynamic> params) {
           setState(() {
             scheduledTests.add(
               ScheduledTest(
@@ -452,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _ParameterPromptDialog extends StatefulWidget {
   final Project project;
-  final Function(DateTime scheduledDateTime, Map<String, String> params) onRun;
+  final Function(DateTime scheduledDateTime, Map<String, dynamic> params) onRun;
   const _ParameterPromptDialog({required this.project, required this.onRun});
 
   @override
@@ -472,7 +446,6 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
   TimeOfDay? scheduledTime;
   bool showAdvanced = false;
 
-  // CRUD dropdown
   final List<String> crudOptions = ['Create', 'Read', 'Update', 'Delete'];
   String selectedCrud = 'Read';
 
@@ -649,7 +622,8 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
                   numUsers: int.parse(usersController.text),
                   rampUpPeriod: int.parse(rampUpController.text),
                   testDuration: int.parse(testPeriodController.text),
-                  scheduledExecutionTime: scheduledDateTime.toIso8601String(),
+                  scheduledExecutionTime: scheduledDateTime, 
+                  crudType: '',
                 );
 
                 try {
@@ -707,4 +681,3 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
         testPeriodController.text.isNotEmpty;
   }
 }
-

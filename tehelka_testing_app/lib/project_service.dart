@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'project.dart'; // Your Project model
 import 'dart:io';
 import "home.dart";
 import "load_test_config_request.dart";
+import "history_screen.dart";
 
 const String baseUrl = 'http://192.168.1.17:8080'; // Replace with your API base URL
 
@@ -54,4 +58,22 @@ Future<bool> scheduleLoadTest(LoadTestConfigRequest request) async {
   } else {
     throw Exception('Failed to schedule test: ${response.body}');
   }
+}
+
+
+Future<List<TestReport>> fetchTestReports() async {
+  final response = await http.get(Uri.parse('$baseUrl/reports'));
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((json) => TestReport.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load reports');
+  }
+}
+
+Future<void> downloadReport(String url, String fileName) async {
+  final dir = await getApplicationDocumentsDirectory();
+  final filePath = '${dir.path}/$fileName';
+  await Dio().download(url, filePath);
+  await OpenFile.open(filePath); 
 }

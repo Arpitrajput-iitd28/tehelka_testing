@@ -4,7 +4,8 @@ class LoadTestConfigRequest {
   final int numUsers;
   final int rampUpPeriod;
   final int testDuration;
-  final String scheduledExecutionTime; // ISO8601 string
+  final String crudType ;
+  final DateTime scheduledExecutionTime; 
 
   LoadTestConfigRequest({
     required this.testName,
@@ -13,6 +14,7 @@ class LoadTestConfigRequest {
     required this.rampUpPeriod,
     required this.testDuration,
     required this.scheduledExecutionTime,
+    required this.crudType,
   });
 
   Map<String, dynamic> toJson() => {
@@ -22,5 +24,6 @@ class LoadTestConfigRequest {
         'rampUpPeriod': rampUpPeriod,
         'testDuration': testDuration,
         'scheduledExecutionTime': scheduledExecutionTime,
+        'crudType': crudType,
       };
 }
