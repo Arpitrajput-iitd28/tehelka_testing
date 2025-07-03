@@ -25,21 +25,19 @@ public class LoadTestConfigService {
         config.setRampUpPeriod(request.getRampUpPeriod());
         config.setTestDuration(request.getTestDuration());
         config.setScheduledExecutionTime(request.getScheduledExecutionTime());
-        config.setFileName(request.getRequestBodyFilePath());
-
         
-        String filePath = request.getRequestBodyFilePath(); // e.g., "uploads/myfile.json"
-        String baseName = filePath;
-        if (baseName.contains("/")) baseName = baseName.substring(baseName.lastIndexOf('/') + 1);
-        if (baseName.contains(".")) baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+        String fileName = request.getFileName();
+        config.setFileName(fileName);
 
-        // Count previous runs for this file
-        int count = loadTestConfigRepository.countByFileName(filePath);
+        String baseName = fileName;
+        if (baseName.contains(".")) {
+            baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+        }
+        
+        int count = loadTestConfigRepository.countByTestNameStartingWith(baseName);
+
         String testName = baseName + (count + 1);
-
         config.setTestName(testName);
-
-    
         
         return loadTestConfigRepository.save(config);
     }
