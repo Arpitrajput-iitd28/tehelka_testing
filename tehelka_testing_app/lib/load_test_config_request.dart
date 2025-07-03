@@ -18,7 +18,7 @@ class LoadTestConfigRequest {
   });
 
   Map<String, dynamic> toJson() => {
-        'testName': fileName,
+        'fileName': fileName,
         'targetUrl': targetUrl,
         'numUsers': numUsers,
         'rampUpPeriod': rampUpPeriod,

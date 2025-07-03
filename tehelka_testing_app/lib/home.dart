@@ -410,8 +410,8 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
   TimeOfDay? scheduledTime;
   bool showAdvanced = false;
 
-  final List<String> crudOptions = ['Create', 'Read', 'Update', 'Delete'];
-  String selectedCrud = 'Read';
+  final List<String> crudOptions = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
+  String selectedCrud = 'READ';
 
   @override
   Widget build(BuildContext context) {
