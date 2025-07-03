@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api/load-tests")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class LoadTestConfigController {
 
     private LoadTestConfigRepository loadTestConfigRepository;

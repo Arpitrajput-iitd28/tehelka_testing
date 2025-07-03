@@ -19,6 +19,7 @@ import org.springframework.core.io.Resource;
 
 @RestController
 @RequestMapping("/api/load-tests/report")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class ReportController {
 
     @Autowired

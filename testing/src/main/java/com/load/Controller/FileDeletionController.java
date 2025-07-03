@@ -7,6 +7,7 @@ import com.load.Service.FileDeletionService;
 
 @RestController
 @RequestMapping("/api/load-tests")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class FileDeletionController {
 
     private final FileDeletionService fileDeletionService;

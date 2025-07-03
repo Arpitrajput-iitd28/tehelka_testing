@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ import com.load.DTO.FileInfo;
 
 @RestController
 @RequestMapping("/api/load-tests")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class FileStorageController {
 
     private final FileStorageService fileStorageService;

@@ -1,6 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -55,7 +55,10 @@ export class LayoutComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router) {}
+  private isBrowser: boolean;
+  constructor(private router: Router, @Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     // Load saved sidebar state from localStorage
@@ -73,9 +76,10 @@ export class LayoutComponent implements OnInit {
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
     
-    // Save state to localStorage
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(this.sidebarCollapsed));
-    
+    // Fix localStorage access
+    if (this.isBrowser) {
+      localStorage.setItem('sidebarCollapsed', JSON.stringify(this.sidebarCollapsed));
+    }
     if (this.sidebarCollapsed) {
       this.testsDropdownOpen = false;
       this.projectsDropdownOpen = false;
@@ -142,10 +146,13 @@ export class LayoutComponent implements OnInit {
   }
 
   loadUserData(): void {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      this.currentUser = JSON.parse(userData);
-      console.log('User data loaded:', this.currentUser);
+    // Fix localStorage access
+    if (this.isBrowser) {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        this.currentUser = JSON.parse(userData);
+        console.log('User data loaded:', this.currentUser);
+      }
     }
   }
 
@@ -156,8 +163,10 @@ export class LayoutComponent implements OnInit {
 
   logout(): void {
     console.log('Logging out user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    if (this.isBrowser) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
     this.router.navigate(['/login']);
   }
 

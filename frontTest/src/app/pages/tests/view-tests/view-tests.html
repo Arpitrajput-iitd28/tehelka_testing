@@ -14,270 +14,279 @@
       </div>
     </div>
 
-    <!-- Filters and Search -->
-    <div class="filters-section">
-      <div class="search-filter">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search tests..." [(ngModel)]="searchQuery" 
-                 (input)="onSearch()">
-        </div>
-      </div>
-      
-      <div class="filter-controls">
-        <select [(ngModel)]="statusFilter" (change)="onFilterChange()" class="filter-select">
-          <option value="">All Status</option>
-          <option value="RUNNING">Running</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="FAILED">Failed</option>
-          <option value="SCHEDULED">Scheduled</option>
-          <option value="DRAFT">Draft</option>
-        </select>
-        
-        <select [(ngModel)]="projectFilter" (change)="onFilterChange()" class="filter-select">
-          <option value="">All Projects</option>
-          <option value="ecommerce">E-commerce API</option>
-          <option value="dashboard">Dashboard UI</option>
-          <option value="auth">Authentication Service</option>
-          <option value="payment">Payment System</option>
-        </select>
-        
-        <select [(ngModel)]="typeFilter" (change)="onFilterChange()" class="filter-select">
-          <option value="">All Types</option>
-          <option value="load">Load Test</option>
-          <option value="stress">Stress Test</option>
-          <option value="spike">Spike Test</option>
-          <option value="volume">Volume Test</option>
-        </select>
-        
-        <button class="btn-outline" (click)="clearFilters()">
-          <i class="fas fa-times"></i>
-          Clear Filters
-        </button>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading tests...</p>
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon running">
-          <i class="fas fa-play-circle"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{getTestCountByStatus('RUNNING')}}</h3>
-          <p>Running Tests</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon completed">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{getTestCountByStatus('COMPLETED')}}</h3>
-          <p>Completed Tests</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon failed">
-          <i class="fas fa-exclamation-circle"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{getTestCountByStatus('FAILED')}}</h3>
-          <p>Failed Tests</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon scheduled">
-          <i class="fas fa-clock"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{getTestCountByStatus('SCHEDULED')}}</h3>
-          <p>Scheduled Tests</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tests Table -->
-    <div class="tests-table-container">
-      <div class="table-header">
-        <h2>Test Results</h2>
-        <div class="table-actions">
-          <button class="btn-secondary" (click)="refreshTests()">
-            <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
-            Refresh
-          </button>
-          <button class="btn-outline" (click)="exportTests()">
-            <i class="fas fa-download"></i>
-            Export
-          </button>
-        </div>
-      </div>
-      
-      <div class="table-wrapper">
-        <table class="tests-table">
-          <thead>
-            <tr>
-              <th (click)="sortBy('name')" class="sortable">
-                Test Name
-                <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'name' && sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortField === 'name' && sortDirection === 'desc'"></i>
-              </th>
-              <th (click)="sortBy('project')" class="sortable">
-                Project
-                <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'project' && sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortField === 'project' && sortDirection === 'desc'"></i>
-              </th>
-              <th>Type</th>
-              <th (click)="sortBy('status')" class="sortable">
-                Status
-                <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'status' && sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortField === 'status' && sortDirection === 'desc'"></i>
-              </th>
-              <th (click)="sortBy('startTime')" class="sortable">
-                Start Time
-                <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'startTime' && sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortField === 'startTime' && sortDirection === 'desc'"></i>
-              </th>
-              <th>Duration</th>
-              <th>Virtual Users</th>
-              <th>Success Rate</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let test of paginatedTests; trackBy: trackByTestId" 
-                [class]="'status-' + test.status.toLowerCase()">
-              <td>
-                <div class="test-name">
-                  <strong>{{test.name}}</strong>
-                  <small *ngIf="test.description">{{test.description}}</small>
-                </div>
-              </td>
-              <td>
-                <span class="project-badge">{{test.project}}</span>
-              </td>
-              <td>
-                <span class="type-badge" [class]="'type-' + test.type">{{test.type | titlecase}}</span>
-              </td>
-              <td>
-                <span class="status-badge" [class]="'status-' + test.status.toLowerCase()">
-                  <i class="fas" [class.fa-play]="test.status === 'RUNNING'"
-                     [class.fa-check]="test.status === 'COMPLETED'"
-                     [class.fa-times]="test.status === 'FAILED'"
-                     [class.fa-clock]="test.status === 'SCHEDULED'"
-                     [class.fa-edit]="test.status === 'DRAFT'"></i>
-                  {{test.status}}
-                </span>
-              </td>
-              <td>{{test.startTime | date:'medium'}}</td>
-              <td>{{test.duration || 'N/A'}}</td>
-              <td>{{test.virtualUsers | number}}</td>
-              <td>
-                <div class="success-rate" *ngIf="test.successRate !== null">
-                  <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="test.successRate"></div>
-                  </div>
-                  <span>{{test.successRate}}%</span>
-                </div>
-                <span *ngIf="test.successRate === null">-</span>
-              </td>
-              <td>
-                <div class="action-buttons">
-                  <button *ngIf="test.status === 'COMPLETED'" 
-                          (click)="viewReport(test.id)" 
-                          class="btn-action btn-view" 
-                          title="View Report">
-                    <i class="fas fa-chart-line"></i>
-                  </button>
-                  
-                  <button *ngIf="test.status === 'RUNNING'" 
-                          (click)="stopTest(test.id)" 
-                          class="btn-action btn-stop" 
-                          title="Stop Test">
-                    <i class="fas fa-stop"></i>
-                  </button>
-                  
-                  <button *ngIf="test.status === 'SCHEDULED'" 
-                          (click)="cancelTest(test.id)" 
-                          class="btn-action btn-cancel" 
-                          title="Cancel Test">
-                    <i class="fas fa-times"></i>
-                  </button>
-                  
-                  <button *ngIf="test.status === 'DRAFT'" 
-                          (click)="editTest(test.id)" 
-                          class="btn-action btn-edit" 
-                          title="Edit Test">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  
-                  <button *ngIf="test.status === 'FAILED'" 
-                          (click)="retryTest(test.id)" 
-                          class="btn-action btn-retry" 
-                          title="Retry Test">
-                    <i class="fas fa-redo"></i>
-                  </button>
-                  
-                  <button (click)="duplicateTest(test.id)" 
-                          class="btn-action btn-duplicate" 
-                          title="Duplicate Test">
-                    <i class="fas fa-copy"></i>
-                  </button>
-                  
-                  <button (click)="deleteTest(test.id)" 
-                          class="btn-action btn-delete" 
-                          title="Delete Test">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <!-- Empty State -->
-        <div *ngIf="filteredTests.length === 0" class="empty-state">
-          <i class="fas fa-vial"></i>
-          <h3>No Tests Found</h3>
-          <p>{{searchQuery || statusFilter || projectFilter || typeFilter ? 'No tests match your current filters.' : 'You haven\'t created any tests yet.'}}</p>
-          <button class="btn-primary" routerLink="/tests/create">
-            <i class="fas fa-plus"></i>
-            Create Your First Test
-          </button>
-        </div>
-      </div>
-      
-      <!-- Pagination -->
-      <div class="pagination" *ngIf="filteredTests.length > pageSize">
-        <div class="pagination-info">
-          Showing {{(currentPage - 1) * pageSize + 1}} to {{Math.min(currentPage * pageSize, filteredTests.length)}} 
-          of {{filteredTests.length}} tests
+    <!-- Main Content (when not loading) -->
+    <div *ngIf="!isLoading">
+      <!-- Filters and Search -->
+      <div class="filters-section">
+        <div class="search-filter">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search tests..." [(ngModel)]="searchQuery" 
+                   (input)="onSearch()">
+          </div>
         </div>
         
-        <div class="pagination-controls">
-          <button (click)="goToPage(currentPage - 1)" 
-                  [disabled]="currentPage === 1" 
-                  class="btn-pagination">
-            <i class="fas fa-chevron-left"></i>
-          </button>
+        <div class="filter-controls">
+          <select [(ngModel)]="statusFilter" (change)="onFilterChange()" class="filter-select">
+            <option value="">All Status</option>
+            <option value="RUNNING">Running</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="FAILED">Failed</option>
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="DRAFT">Draft</option>
+          </select>
           
-          <span class="page-numbers">
-            <button *ngFor="let page of getPageNumbers()" 
-                    (click)="goToPage(page)" 
-                    [class.active]="page === currentPage"
-                    class="btn-page">
-              {{page}}
+          <select [(ngModel)]="projectFilter" (change)="onFilterChange()" class="filter-select">
+            <option value="">All Projects</option>
+            <option *ngFor="let project of getProjectOptions()" [value]="project">{{project}}</option>
+          </select>
+          
+          <select [(ngModel)]="typeFilter" (change)="onFilterChange()" class="filter-select">
+            <option value="">All Types</option>
+            <option *ngFor="let type of getTypeOptions()" [value]="type">{{type | titlecase}} Test</option>
+          </select>
+          
+          <button class="btn-outline" (click)="clearFilters()">
+            <i class="fas fa-times"></i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon running">
+            <i class="fas fa-play-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getTestCountByStatus('RUNNING')}}</h3>
+            <p>Running Tests</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon completed">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getTestCountByStatus('COMPLETED')}}</h3>
+            <p>Completed Tests</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon failed">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getTestCountByStatus('FAILED')}}</h3>
+            <p>Failed Tests</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon scheduled">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getTestCountByStatus('SCHEDULED')}}</h3>
+            <p>Scheduled Tests</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tests Table -->
+      <div class="tests-table-container">
+        <div class="table-header">
+          <h2>Test Results</h2>
+          <div class="table-actions">
+            <button class="btn-secondary" (click)="refreshTests()">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+              Refresh
             </button>
-          </span>
+            <button class="btn-outline" (click)="exportTests()">
+              <i class="fas fa-download"></i>
+              Export JSON
+            </button>
+            <button class="btn-outline" (click)="exportTestsCsv()">
+              <i class="fas fa-file-csv"></i>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        
+        <div class="table-wrapper">
+          <table class="tests-table">
+            <thead>
+              <tr>
+                <th (click)="sortBy('testName')" class="sortable">
+                  Test Name
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'testName' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortField === 'testName' && sortDirection === 'desc'"></i>
+                </th>
+                <th (click)="sortBy('project')" class="sortable">
+                  Project
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'project' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortField === 'project' && sortDirection === 'desc'"></i>
+                </th>
+                <th>Type</th>
+                <th (click)="sortBy('status')" class="sortable">
+                  Status
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'status' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortField === 'status' && sortDirection === 'desc'"></i>
+                </th>
+                <th (click)="sortBy('createdAt')" class="sortable">
+                  Created At
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'createdAt' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortField === 'createdAt' && sortDirection === 'desc'"></i>
+                </th>
+                <th>Duration</th>
+                <th>Virtual Users</th>
+                <th>Success Rate</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let test of paginatedTests; trackBy: trackByTestId" 
+                  [class]="getStatusClass(test.status)">
+                <td>
+                  <div class="test-name">
+                    <strong>{{test.testName}}</strong>
+                    <small>{{test.fileName}}</small>
+                  </div>
+                </td>
+                <td>
+                  <span class="project-badge">{{test.project}}</span>
+                </td>
+                <td>
+                  <span class="type-badge" [class]="getTypeClass(test.type)">{{test.type | titlecase}}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [class]="getStatusClass(test.status)">
+                    <i class="fas" [class.fa-play]="isTestRunning(test)"
+                       [class.fa-check]="isTestCompleted(test)"
+                       [class.fa-times]="isTestFailed(test)"
+                       [class.fa-clock]="isTestScheduled(test)"
+                       [class.fa-edit]="test.status === 'DRAFT'"></i>
+                    {{test.status}}
+                  </span>
+                </td>
+                <td>{{formatDate(test.createdAt) | date:'medium'}}</td>
+                <td>{{test.duration}}</td>
+                <td>{{test.numUsers | number}}</td>
+                <td>
+                  <div class="success-rate" *ngIf="test.successRate !== null && test.successRate !== undefined">
+                    <div class="progress-bar">
+                      <div class="progress-fill" [style.width.%]="test.successRate"></div>
+                    </div>
+                    <span>{{test.successRate}}%</span>
+                  </div>
+                  <span *ngIf="test.successRate === null || test.successRate === undefined">-</span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button *ngIf="isTestCompleted(test)" 
+                            (click)="viewReport(test.id)" 
+                            class="btn-action btn-view" 
+                            title="View Report">
+                      <i class="fas fa-chart-line"></i>
+                    </button>
+                    
+                    <button *ngIf="canStopTest(test)" 
+                            (click)="stopTest(test.id)" 
+                            class="btn-action btn-stop" 
+                            title="Stop Test">
+                      <i class="fas fa-stop"></i>
+                    </button>
+                    
+                    <button *ngIf="canCancelTest(test)" 
+                            (click)="cancelTest(test.id)" 
+                            class="btn-action btn-cancel" 
+                            title="Cancel Test">
+                      <i class="fas fa-times"></i>
+                    </button>
+                    
+                    <button *ngIf="test.status === 'DRAFT'" 
+                            (click)="editTest(test.id)" 
+                            class="btn-action btn-edit" 
+                            title="Edit Test">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    
+                    <button *ngIf="canRetryTest(test)" 
+                            (click)="retryTest(test.id)" 
+                            class="btn-action btn-retry" 
+                            title="Retry Test">
+                      <i class="fas fa-redo"></i>
+                    </button>
+                    
+                    <button (click)="duplicateTest(test.id)" 
+                            class="btn-action btn-duplicate" 
+                            title="Duplicate Test">
+                      <i class="fas fa-copy"></i>
+                    </button>
+                    
+                    <button (click)="deleteTest(test.id)" 
+                            class="btn-action btn-delete" 
+                            title="Delete Test">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           
-          <button (click)="goToPage(currentPage + 1)" 
-                  [disabled]="currentPage === totalPages" 
-                  class="btn-pagination">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+          <!-- Empty State -->
+          <div *ngIf="filteredTests.length === 0 && !isLoading" class="empty-state">
+            <i class="fas fa-vial"></i>
+            <h3>No Tests Found</h3>
+            <p>{{searchQuery || statusFilter || projectFilter || typeFilter ? 'No tests match your current filters.' : 'You haven\'t created any tests yet.'}}</p>
+            <button class="btn-primary" routerLink="/tests/create">
+              <i class="fas fa-plus"></i>
+              Create Your First Test
+            </button>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="filteredTests.length > pageSize">
+          <div class="pagination-info">
+            Showing {{(currentPage - 1) * pageSize + 1}} to {{Math.min(currentPage * pageSize, filteredTests.length)}} 
+            of {{filteredTests.length}} tests
+          </div>
+          
+          <div class="pagination-controls">
+            <button (click)="goToPage(currentPage - 1)" 
+                    [disabled]="currentPage === 1" 
+                    class="btn-pagination">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <span class="page-numbers">
+              <button *ngFor="let page of getPageNumbers()" 
+                      (click)="goToPage(page)" 
+                      [class.active]="page === currentPage"
+                      class="btn-page">
+                {{page}}
+              </button>
+            </span>
+            
+            <button (click)="goToPage(currentPage + 1)" 
+                    [disabled]="currentPage === totalPages" 
+                    class="btn-pagination">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>

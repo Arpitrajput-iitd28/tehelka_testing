@@ -18,8 +18,5 @@ public class LoadTestConfigRequest {
     private int testDuration; // in seconds
     private LocalDateTime scheduledExecutionTime;
     private CrudType crudType;
-    
-   
-
 }
 

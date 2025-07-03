@@ -4,12 +4,14 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 import { LayoutComponent } from '../../../shared/layout/layout';
+import { CreateTestService, LoadTestConfigRequest } from './create-test-service';
 
 @Component({
   selector: 'app-create-test',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, LayoutComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, LayoutComponent, HttpClientModule],
   templateUrl: './create-test.html',
   styleUrls: ['./create-test.css']
 })
@@ -22,7 +24,8 @@ export class CreateTestComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private router: Router
+    private router: Router,
+    private loadTestApiService: CreateTestService
   ) {
     this.createTestForm = this.formBuilder.group({
       testName: ['', Validators.required],
@@ -84,21 +87,56 @@ export class CreateTestComponent implements OnInit {
 
   saveAsDraft(): void {
     console.log('Saving test as draft:', this.createTestForm.value);
-    // Implement save as draft logic
+    // Implement save as draft logic - could be a separate API endpoint
     alert('Test saved as draft!');
   }
 
   createTest(): void {
-    if (this.createTestForm.valid) {
+  if (this.createTestForm.valid) {
       this.isCreating = true;
-      console.log('Creating test:', this.createTestForm.value);
       
-      // Simulate API call
-      setTimeout(() => {
-        this.isCreating = false;
-        alert('Test created successfully!');
-        this.router.navigate(['/tests']);
-      }, 2000);
+      const apiRequest: LoadTestConfigRequest = this.loadTestApiService.convertFormToApiRequest(
+        this.createTestForm.value, 
+        this.selectedFile ?? undefined
+      );
+
+      console.log('Sending API request:', apiRequest);
+
+      this.loadTestApiService.createLoadTestConfig(apiRequest).subscribe({
+        next: (response) => {
+          console.log('Test created successfully:', response);
+          this.isCreating = false;
+          alert(`Test "${response.fileName}" created successfully!`);
+          this.router.navigate(['/tests']);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Full error object:', error);
+          console.error('Error status:', error.status);
+          console.error('Error message:', error.message);
+          console.error('Error body:', error.error);
+          
+          this.isCreating = false;
+          
+          // Show more detailed error message
+          let errorMessage = 'Failed to create test.';
+          if (error.error && typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          alert(`Error (${error.status}): ${errorMessage}`);
+        }
+      });
     }
+  }
+
+  private markFormGroupTouched(): void {
+    Object.keys(this.createTestForm.controls).forEach(key => {
+      const control = this.createTestForm.get(key);
+      control?.markAsTouched();
+    });
   }
 }
