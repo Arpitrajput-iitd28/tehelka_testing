@@ -88,15 +88,15 @@ Future<void> downloadReport(String url, String fileName) async {
 //   }
 
 // Fetch scheduled tests
-Future<List<home.ScheduledTest>> fetchSchedule() async {
+Future<List<ScheduledTest>> fetchSchedule() async {
   final response = await http.get(Uri.parse('$baseUrl/api/load-tests/schedule'));
-  if (response.statusCode == 200 || response.statusCode == 201) {
+  if (response.statusCode == 200) {
     final List data = jsonDecode(response.body);
-    final tests = data.map((json) => ScheduledTest.fromJson(json)).toList();
+    return data.map((json) => ScheduledTest.fromJson(json)).toList();
   } else {
     throw Exception('Failed to load schedule');
   }
-}
+} 
 
 // Fetch test history/reports
 Future<List<TestReport>> fetchTestReports() async {

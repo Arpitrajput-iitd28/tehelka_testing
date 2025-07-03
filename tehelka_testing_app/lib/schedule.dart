@@ -1,16 +1,6 @@
 import 'package:flutter/material.dart';
 import 'project_service.dart'; // Make sure this contains fetchSchedule()
-import 'project.dart'; 
-
-Future<List<ScheduledTest>> fetchSchedule() async {
-  final response = await http.get(Uri.parse('...'));
-  if (response.statusCode == 200) {
-    final List data = jsonDecode(response.body);
-    return data.map((json) => ScheduledTest.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to load schedule');
-  }
-}
+import 'project.dart'; // For ScheduledTest model
 
 const Color kNavyBlue = Color(0xFF0A183D);
 const Color kCardColor = Color(0xFF162447);
@@ -93,12 +83,3 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 }
 
 
-Future<List<ScheduledTest>> fetchSchedule() async {
-  final response = await http.get(Uri.parse('...'));
-  if (response.statusCode == 200) {
-    final List data = jsonDecode(response.body);
-    return data.map((json) => ScheduledTest.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to load schedule');
-  }
-}
