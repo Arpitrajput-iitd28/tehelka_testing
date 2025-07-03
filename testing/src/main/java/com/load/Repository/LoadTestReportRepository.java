@@ -10,7 +10,8 @@ import com.load.Model.LoadTestReport;
 
 public interface LoadTestReportRepository extends JpaRepository<LoadTestReport, Long> {
     Optional<LoadTestReport> findByConfigId(Long configId);
-    List<LoadTestReport> findByScheduledFalseOrderByScheduledExecutionTimeDesc();
+    List<LoadTestReport> findByScheduledFalse();
+    
 
 }
 
