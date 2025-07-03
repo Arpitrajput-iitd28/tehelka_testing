@@ -5,7 +5,7 @@ class LoadTestConfigRequest {
   final int rampUpPeriod;
   final int testDuration;
   final String crudType ;
-  final DateTime scheduledExecutionTime; 
+  final String scheduledExecutionTime; 
 
   LoadTestConfigRequest({
     required this.fileName,

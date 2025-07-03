@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _scheduleTest(Project project, Map<String, String> params, DateTime scheduledDateTime) async {
+  Future<void> _scheduleTest(Project project, Map<String, dynamic> params, DateTime scheduledDateTime) async {
   // Build your request object
   final configRequest = LoadTestConfigRequest(
     // testName: '', // leave empty, backend will generate
@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
     numUsers: int.tryParse(params['Users'] ?? '') ?? 0,
     rampUpPeriod: int.tryParse(params['Ramp-up Period (sec)'] ?? '') ?? 0,
     testDuration: int.tryParse(params['Test Period (min)'] ?? '') ?? 0,
-    scheduledExecutionTime: scheduledDateTime,
+    scheduledExecutionTime: scheduledDateTime.toIso8601String(),
     crudType: params['Operation'] ?? 'READ',
     fileName: project.name, // <-- ADD THIS FIELD
   );
@@ -338,19 +338,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => _ParameterPromptDialog(
         project: project,
-        onRun: (DateTime scheduledDateTime, Map<String, dynamic> params) {
-          setState(() {
-            String filename = project.file?.name ?? project.name;
-            int counter = scheduledTests.where((t) => t.testName.startsWith(filename)).length + 1;
-            String testName = "$filename#$counter";
-            scheduledTests.add(
-              ScheduledTest(
-                testName: testName,
-                scheduledDateTime: scheduledDateTime,
-                parameters: params,
-              ),
-            );
-          });
+        onRun: (DateTime scheduledDateTime, Map<String, dynamic> params) async {
+          await _scheduleTest(project, params, scheduledDateTime);
         },
       ),
     );
@@ -597,7 +586,7 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
                   numUsers: int.parse(usersController.text),
                   rampUpPeriod: int.parse(rampUpController.text),
                   testDuration: int.parse(testPeriodController.text),
-                  scheduledExecutionTime: scheduledDateTime,
+                  scheduledExecutionTime: scheduledDateTime.toIso8601String(),
                   crudType: selectedCrud,
                 );
 
