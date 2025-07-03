@@ -18,7 +18,7 @@ import org.springframework.core.io.Resource;
 
 
 @RestController
-@RequestMapping("/api/load-test/report")
+@RequestMapping("/api/load-tests/report")
 public class ReportController {
 
     @Autowired
