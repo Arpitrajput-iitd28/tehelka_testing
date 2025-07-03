@@ -52,7 +52,7 @@ Future<bool> scheduleLoadTest(LoadTestConfigRequest request) async {
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode(request.toJson()),
   );
-  if (response.statusCode == 200) {
+  if (response.statusCode == 200 || response.statusCode == 201) {
     // You can parse response.body if you want to use the returned config
     return true;
   } else {
