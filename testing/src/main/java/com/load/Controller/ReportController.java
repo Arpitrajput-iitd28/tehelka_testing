@@ -1,5 +1,7 @@
 package com.load.Controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,14 @@ public class ReportController {
     private LoadTestReportRepository reportRepository;
     @Autowired
     private ReportService reportService;
+
+    @GetMapping("/history")
+    public List<LoadTestReport> getHistory() {
+        return reportRepository.findByScheduledFalseOrderByScheduledExecutionTimeDesc();
+    }
+
+
+
 
     @GetMapping("/{configId}/json")
     public ResponseEntity<String> getJsonReport(@PathVariable Long configId) {

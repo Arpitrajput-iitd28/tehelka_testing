@@ -13,5 +13,7 @@ public interface LoadTestConfigRepository extends JpaRepository<LoadTestConfig, 
      List<LoadTestConfig> findByScheduledAndScheduledExecutionTimeBefore(boolean scheduled, LocalDateTime time);
      int countByFileName(String fileName);
      int countByTestNameStartingWith(String baseName);
+     List<LoadTestConfig> findByScheduledTrueOrderByScheduledExecutionTimeAsc();
+
 }
 
