@@ -25,6 +25,8 @@ public class LoadTestConfigService {
         config.setRampUpPeriod(request.getRampUpPeriod());
         config.setTestDuration(request.getTestDuration());
         config.setScheduledExecutionTime(request.getScheduledExecutionTime());
+        config.setScheduled(true);
+
         
         String fileName = request.getFileName();
         config.setFileName(fileName);
@@ -38,7 +40,7 @@ public class LoadTestConfigService {
 
         String testName = baseName + (count + 1);
         config.setTestName(testName);
-        
+
         return loadTestConfigRepository.save(config);
     }
 }
