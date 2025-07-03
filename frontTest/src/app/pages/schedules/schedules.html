@@ -1,0 +1,309 @@
+<app-layout pageTitle="Test Schedules">
+  <div class="schedules-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Test Schedules</h1>
+        <p>Manage your scheduled load tests</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" (click)="showCreateModal = true">
+          <i class="fas fa-plus"></i>
+          Create New Schedule
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon upcoming">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{upcomingTests}}</h3>
+          <p>Upcoming Tests</p>
+          <small>Next 24 hours</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon active">
+          <i class="fas fa-play-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{activeSchedules}}</h3>
+          <p>Active Schedules</p>
+          <small>Currently running</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon completed">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{completedToday}}</h3>
+          <p>Completed Today</p>
+          <small>Successfully finished</small>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon failed">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{failedSchedules}}</h3>
+          <p>Failed Schedules</p>
+          <small>Need attention</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Toggle and Filters -->
+    <div class="controls-section">
+      <div class="view-toggle">
+        <button class="toggle-btn" [class.active]="currentView === 'list'" (click)="switchView('list')">
+          <i class="fas fa-list"></i>
+          List View
+        </button>
+        <button class="toggle-btn" [class.active]="currentView === 'calendar'" (click)="switchView('calendar')">
+          <i class="fas fa-calendar"></i>
+          Calendar View
+        </button>
+      </div>
+      
+      <div class="filters-section">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search schedules..." [(ngModel)]="searchQuery" (input)="onSearch()">
+        </div>
+        
+        <select [(ngModel)]="statusFilter" (change)="onFilterChange()" class="filter-select">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="paused">Paused</option>
+          <option value="completed">Completed</option>
+        </select>
+        
+        <select [(ngModel)]="projectFilter" (change)="onFilterChange()" class="filter-select">
+          <option value="">All Projects</option>
+          <option value="ecommerce">E-commerce API</option>
+          <option value="dashboard">Dashboard UI</option>
+          <option value="auth">Authentication Service</option>
+          <option value="payment">Payment System</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div *ngIf="currentView === 'list'" class="list-view">
+      <div class="schedules-table-container">
+        <table class="schedules-table">
+          <thead>
+            <tr>
+              <th>Schedule Name</th>
+              <th>Project</th>
+              <th>Next Run Time</th>
+              <th>Frequency</th>
+              <th>Status</th>
+              <th>Last Result</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let schedule of filteredSchedules" [class]="'status-' + schedule.status">
+              <td>
+                <div class="schedule-name">
+                  <strong>{{schedule.name}}</strong>
+                  <small>{{schedule.testName}}</small>
+                </div>
+              </td>
+              <td>
+                <span class="project-badge">{{schedule.project}}</span>
+              </td>
+              <td>
+                <div class="next-run">
+                  <span class="date">{{schedule.nextRun | date:'MMM d, y'}}</span>
+                  <span class="time">{{schedule.nextRun | date:'h:mm a'}}</span>
+                </div>
+              </td>
+              <td>
+                <span class="frequency-badge" [class]="'freq-' + schedule.frequency.toLowerCase()">
+                  {{schedule.frequency}}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [class]="'status-' + schedule.status">
+                  <i class="fas" [class.fa-play]="schedule.status === 'active'"
+                     [class.fa-pause]="schedule.status === 'paused'"
+                     [class.fa-check]="schedule.status === 'completed'"></i>
+                  {{schedule.status | titlecase}}
+                </span>
+              </td>
+              <td>
+                <span *ngIf="schedule.lastResult" class="result-badge" [class]="'result-' + schedule.lastResult">
+                  {{schedule.lastResult | titlecase}}
+                </span>
+                <span *ngIf="!schedule.lastResult">-</span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button (click)="editSchedule(schedule.id)" class="btn-action btn-edit" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button *ngIf="schedule.status === 'active'" 
+                          (click)="pauseSchedule(schedule.id)" 
+                          class="btn-action btn-pause" title="Pause">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                  <button *ngIf="schedule.status === 'paused'" 
+                          (click)="resumeSchedule(schedule.id)" 
+                          class="btn-action btn-resume" title="Resume">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <button (click)="deleteSchedule(schedule.id)" 
+                          class="btn-action btn-delete" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- Empty State -->
+        <div *ngIf="filteredSchedules.length === 0" class="empty-state">
+          <i class="fas fa-calendar-times"></i>
+          <h3>No Schedules Found</h3>
+          <p>{{searchQuery || statusFilter || projectFilter ? 'No schedules match your current filters.' : 'You haven\'t created any schedules yet.'}}</p>
+          <button class="btn-primary" (click)="showCreateModal = true">
+            <i class="fas fa-plus"></i>
+            Create Your First Schedule
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar View -->
+    <div *ngIf="currentView === 'calendar'" class="calendar-view">
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <button class="btn-nav" (click)="previousMonth()">
+            <img src="previous_arrow.webp" alt="Previous Month">
+          </button>
+          <h3>{{currentMonth | date:'MMMM yyyy'}}</h3>
+          <button class="btn-nav" (click)="nextMonth()">
+          </button>
+        </div>
+        
+        <div class="calendar-grid">
+          <div class="calendar-day-header" *ngFor="let day of dayHeaders">{{day}}</div>
+            <div *ngFor="let day of calendarDays" 
+                class="calendar-day" 
+                [class.other-month]="!day.isCurrentMonth"
+                [class.today]="day.isToday"
+                [class.selected]="isDateSelected(day.date)"
+                (click)="selectDate(day.date)">
+                <span class="day-number">{{day.date | date:'d'}}</span>
+                <div class="day-schedules">
+                    <div *ngFor="let schedule of getSchedulesForDate(day.date)" 
+                        class="schedule-dot" 
+                        [class]="'dot-' + schedule.status"
+                        [title]="schedule.name + ' - ' + (schedule.nextRun | date:'h:mm a')">
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+      
+      <!-- Selected Date Details -->
+      <div *ngIf="selectedDate" class="selected-date-details">
+        <h4>{{selectedDate | date:'EEEE, MMMM d, yyyy'}}</h4>
+        <div *ngIf="getSchedulesForDate(selectedDate).length > 0" class="date-schedules">
+          <div *ngFor="let schedule of getSchedulesForDate(selectedDate)" class="schedule-item">
+            <div class="schedule-info">
+              <strong>{{schedule.name}}</strong>
+              <span class="schedule-time">{{schedule.nextRun | date:'h:mm a'}}</span>
+            </div>
+            <span class="status-badge" [class]="'status-' + schedule.status">
+              {{schedule.status | titlecase}}
+            </span>
+          </div>
+        </div>
+        <div *ngIf="getSchedulesForDate(selectedDate).length === 0" class="no-schedules">
+          <p>No schedules for this date</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Schedule Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="closeModal($event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create New Schedule</h3>
+        <button (click)="showCreateModal = false" class="close-btn">×</button>
+      </div>
+      
+      <form [formGroup]="createScheduleForm" (ngSubmit)="createSchedule()" class="schedule-form">
+        <div class="form-group">
+          <label>Schedule Name</label>
+          <input type="text" formControlName="scheduleName" placeholder="Enter schedule name">
+        </div>
+        
+        <div class="form-group">
+          <label>Select Test</label>
+          <select formControlName="testId">
+            <option value="">Choose a test</option>
+            <option value="1">API Performance Test</option>
+            <option value="2">Database Stress Test</option>
+            <option value="3">Frontend Load Test</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Project</label>
+          <select formControlName="project">
+            <option value="">Select project</option>
+            <option value="ecommerce">E-commerce API</option>
+            <option value="dashboard">Dashboard UI</option>
+            <option value="auth">Authentication Service</option>
+            <option value="payment">Payment System</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Frequency</label>
+          <select formControlName="frequency" (change)="onFrequencyChange()">
+            <option value="one-time">One-time</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>{{selectedFrequency === 'one-time' ? 'Schedule Date & Time' : 'Start Date & Time'}}</label>
+          <input type="datetime-local" formControlName="startDateTime">
+        </div>
+        
+        <div *ngIf="selectedFrequency === 'weekly'" class="form-group">
+          <label>Days of Week</label>
+          <div class="days-selector">
+            <label *ngFor="let day of weekDays" class="day-checkbox">
+              <input type="checkbox" [value]="day.value" (change)="onDayChange($event)">
+              {{day.label}}
+            </label>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" (click)="showCreateModal = false" class="btn-secondary">Cancel</button>
+          <button type="submit" [disabled]="createScheduleForm.invalid" class="btn-primary">Create Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</app-layout>

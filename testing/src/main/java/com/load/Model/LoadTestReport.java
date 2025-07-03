@@ -1,5 +1,7 @@
 package com.load.Model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +17,8 @@ public class LoadTestReport {
     private Long configId;
     private int successCount;
     private int errorCount;
-
+    private boolean scheduled;
+    private LocalDateTime scheduledExecutionTime;
     @Lob
     private String statusCodesJson; // Store status code map as JSON
 

@@ -1,5 +1,6 @@
 package com.load.Controller;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import org.springframework.core.io.Resource;
 
 
 @RestController
-@RequestMapping("/api/load-test/report")
+@RequestMapping("/api/load-tests/report")
 public class ReportController {
 
     @Autowired
@@ -29,8 +30,10 @@ public class ReportController {
 
     @GetMapping("/history")
     public List<LoadTestReport> getHistory() {
-        return reportRepository.findByScheduledFalseOrderByScheduledExecutionTimeDesc();
-    }
+        List<LoadTestReport> reports = reportRepository.findByScheduledFalse();
+        reports.sort(Comparator.comparing(LoadTestReport::getScheduledExecutionTime).reversed());
+        return reports;
+}
 
 
 

@@ -58,14 +58,23 @@ export class LayoutComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
+    // Load saved sidebar state from localStorage
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState !== null) {
+      this.sidebarCollapsed = JSON.parse(savedState);
+    } else {
+      // Default to collapsed if no saved state
+      this.sidebarCollapsed = true;
+    }
+    
     this.loadUserData();
-    console.log('Layout component initialized');
   }
 
-  // Sidebar methods
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
-    console.log('Sidebar collapsed:', this.sidebarCollapsed);
+    
+    // Save state to localStorage
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(this.sidebarCollapsed));
     
     if (this.sidebarCollapsed) {
       this.testsDropdownOpen = false;
