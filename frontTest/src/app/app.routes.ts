@@ -7,6 +7,7 @@ import { ViewTestsComponent } from './pages/tests/view-tests/view-tests';
 import { ViewProjectsComponent } from './pages/projects/view-projects/view-projects';
 import { CreateProjectComponent } from './pages/projects/create-project/create-project';
 import { ManageProjectsComponent } from './pages/projects/manage-projects/manage-projects';
+import { SchedulesComponent } from './pages/schedules/schedules';
 
 export const routes: Routes = [
     {path: "login", component: LoginComponent},
@@ -21,6 +22,7 @@ export const routes: Routes = [
     {path: "projects/create", component: CreateProjectComponent},
     {path: "projects/manage", component: ManageProjectsComponent},
 
+    {path: "schedules", component: SchedulesComponent},
     {path: "", redirectTo:'/login',pathMatch:'full'},
     {path: "**", redirectTo:'/login'},
 ]
