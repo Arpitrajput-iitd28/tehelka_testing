@@ -1,5 +1,5 @@
 class LoadTestConfigRequest {
-  final String testName;
+  final String fileName;
   final String targetUrl;
   final int numUsers;
   final int rampUpPeriod;
@@ -8,7 +8,7 @@ class LoadTestConfigRequest {
   final DateTime scheduledExecutionTime; 
 
   LoadTestConfigRequest({
-    required this.testName,
+    required this.fileName,
     required this.targetUrl,
     required this.numUsers,
     required this.rampUpPeriod,
@@ -18,7 +18,7 @@ class LoadTestConfigRequest {
   });
 
   Map<String, dynamic> toJson() => {
-        'testName': testName,
+        'testName': fileName,
         'targetUrl': targetUrl,
         'numUsers': numUsers,
         'rampUpPeriod': rampUpPeriod,

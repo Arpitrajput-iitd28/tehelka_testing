@@ -59,6 +59,21 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _scheduleTest(Project project, Map<String, String> params, DateTime scheduledDateTime) async {
+  // Build your request object
+  final configRequest = LoadTestConfigRequest(
+    // testName: '', // leave empty, backend will generate
+    targetUrl: params['Target URL'] ?? '',
+    numUsers: int.tryParse(params['Users'] ?? '') ?? 0,
+    rampUpPeriod: int.tryParse(params['Ramp-up Period (sec)'] ?? '') ?? 0,
+    testDuration: int.tryParse(params['Test Period (min)'] ?? '') ?? 0,
+    scheduledExecutionTime: scheduledDateTime,
+    crudType: params['Operation'] ?? 'READ',
+    fileName: project.name, // <-- ADD THIS FIELD
+  );
+  await scheduleLoadTest(configRequest);
+}
+
   Future<void> _addProject(String title, PlatformFile? pickedFile) async {
     try {
       final newProject = await createProject(title, pickedFile?.path ?? '');
@@ -577,7 +592,7 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
                 );
 
                 final request = LoadTestConfigRequest(
-                  testName: widget.project.name,
+                  fileName: widget.project.name,
                   targetUrl: urlController.text,
                   numUsers: int.parse(usersController.text),
                   rampUpPeriod: int.parse(rampUpController.text),
