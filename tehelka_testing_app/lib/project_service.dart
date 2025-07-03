@@ -89,7 +89,7 @@ Future<void> downloadReport(String url, String fileName) async {
 
 // Fetch scheduled tests
 Future<List<ScheduledTest>> fetchSchedule() async {
-  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/schedule'));
+  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/scheduled-tests'));
   if (response.statusCode == 200) {
     final List data = jsonDecode(response.body);
     return data.map((json) => ScheduledTest.fromJson(json)).toList();
@@ -100,7 +100,7 @@ Future<List<ScheduledTest>> fetchSchedule() async {
 
 // Fetch test history/reports
 Future<List<TestReport>> fetchTestReports() async {
-  final response = await http.get(Uri.parse('$baseUrl/reports'));
+  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/report/history'));
   if (response.statusCode == 200) {
     final List data = jsonDecode(response.body);
     return data.map((json) => TestReport.fromJson(json)).toList();
