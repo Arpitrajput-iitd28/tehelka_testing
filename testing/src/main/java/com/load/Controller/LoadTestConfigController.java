@@ -21,9 +21,10 @@ public class LoadTestConfigController {
 
     private final LoadTestConfigService loadTestConfigService;
 
-    public LoadTestConfigController(LoadTestConfigService loadTestConfigService) {
+    public LoadTestConfigController(LoadTestConfigService loadTestConfigService, LoadTestConfigRepository loadTestConfigRepository) {
         this.loadTestConfigService = loadTestConfigService;
-    }
+        this.loadTestConfigRepository= loadTestConfigRepository;
+    }   
 
     @PostMapping("/config")
     public ResponseEntity<LoadTestConfig> createLoadTestConfig(@RequestBody LoadTestConfigRequest request) {
