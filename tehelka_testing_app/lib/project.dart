@@ -55,8 +55,8 @@ class ScheduledTest {
   factory ScheduledTest.fromJson(Map json) {
     return ScheduledTest(
       testName: json['testName'] ?? '',
-      scheduledDateTime: DateTime.parse(json['scheduledDateTime']),
-      id: json['id'] ?? "",
+      scheduledDateTime: DateTime.parse(json['scheduledExecutionTime']),
+      id: json['id'] ?? 0,
       targetUrl: json['targetUrl'] ?? '',
       numUsers: json['numUsers'] ?? 0,
       rampUpPeriod: json['rampUpPeriod'] ?? 0,
