@@ -12,7 +12,7 @@ const Color kAccentColor = Color(0xFF1F4068);
 const Color kButtonColor = Color(0xFF324A7D);
 
 class ScheduledTest {
-  final String testName; // filename+counter
+  final String testName;
   final DateTime scheduledDateTime;
   final Map<String, dynamic> parameters;
 
@@ -112,6 +112,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: kAccentColor,
                       height: 24,
                     ),
+                    // Schedule Button (centered, prominent)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kAccentColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          icon: const Icon(Icons.schedule),
+                          label: const Text('Schedule'),
+                          onPressed: _openSchedule,
+                        ),
+                      ),
+                    ),
                     // Project List Container (taller and scrollable)
                     Expanded(
                       child: Padding(
@@ -189,90 +209,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    // Second divider
-                    const Divider(
-                      thickness: 4,
-                      color: kAccentColor,
-                      height: 32,
-                    ),
-                    // Schedule section with "View All" button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Schedule",
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kAccentColor,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: _openSchedule,
-                            child: const Text('View All'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (scheduledTests.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: kCardColor,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.10),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: scheduledTests.length > 2 ? 2 : scheduledTests.length,
-                            itemBuilder: (context, index) {
-                              final sched = scheduledTests[index];
-                              return ListTile(
-                                leading: const Icon(Icons.timer, color: Colors.white),
-                                title: Text(
-                                  sched.testName,
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                                ),
-                                subtitle: Text(
-                                  'Scheduled at: ${_formatDateTime(sched.scheduledDateTime)}',
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.info_outline, color: Colors.white70),
-                                  onPressed: () {
-                                    _showScheduledTestInfo(sched);
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        child: Text(
-                          "No tests scheduled.",
-                          style: TextStyle(color: Colors.white.withOpacity(0.7)),
-                        ),
-                      ),
                   ],
                 ),
     );
@@ -389,7 +325,6 @@ class _HomeScreenState extends State<HomeScreen> {
         project: project,
         onRun: (DateTime scheduledDateTime, Map<String, dynamic> params) {
           setState(() {
-            // Compose testName as filename+counter (simulate backend logic)
             String filename = project.file?.name ?? project.name;
             int counter = scheduledTests.where((t) => t.testName.startsWith(filename)).length + 1;
             String testName = "$filename#$counter";
