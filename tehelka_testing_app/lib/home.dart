@@ -329,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openSchedule() {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ScheduleScreen(scheduledTests: scheduledTests),
+      builder: (_) => ScheduleScreen(),
     ));
   }
 

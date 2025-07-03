@@ -3,9 +3,9 @@ import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'project.dart'; // Your Project model
+import 'project.dart'; 
 import 'dart:io';
-import "home.dart";
+import "home.dart" as home;
 import "load_test_config_request.dart";
 import "history_screen.dart";
 
@@ -61,7 +61,7 @@ Future<bool> scheduleLoadTest(LoadTestConfigRequest request) async {
 }
 
 
-Future<List<TestReport>> fetchTestReports() async {
+Future<List<TestReport>> fetchAllTestReports() async {
   final response = await http.get(Uri.parse('$baseUrl/reports'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
@@ -76,4 +76,35 @@ Future<void> downloadReport(String url, String fileName) async {
   final filePath = '${dir.path}/$fileName';
   await Dio().download(url, filePath);
   await OpenFile.open(filePath); 
+}
+
+// Future<void> deleteProject(String projectName) async {
+//   final response = await http.delete(Uri.parse('$baseUrl/api/load-tests/uploads/$projectName'));
+//   if (response.statusCode == 200 || response.statusCode == 204) {
+//     // Successfully deleted
+//     fetchProjects(); // Refresh the project list
+//   } else {
+//     throw Exception('Failed to delete project: ${response.body}');
+//   }
+
+// Fetch scheduled tests
+Future<List<home.ScheduledTest>> fetchSchedule() async {
+  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/schedule'));
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    final List data = jsonDecode(response.body);
+    final tests = data.map((json) => ScheduledTest.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load schedule');
+  }
+}
+
+// Fetch test history/reports
+Future<List<TestReport>> fetchTestReports() async {
+  final response = await http.get(Uri.parse('$baseUrl/reports'));
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.map((json) => TestReport.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load reports');
+  }
 }
