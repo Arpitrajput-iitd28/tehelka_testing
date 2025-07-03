@@ -1,11 +1,10 @@
-// lib/home.dart
-
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'project_service.dart';
 import 'project.dart';
 import 'load_test_config_request.dart';
 import 'history_screen.dart';
+import 'schedule.dart';
 
 const Color kNavyBlue = Color(0xFF0A183D);
 const Color kCardColor = Color(0xFF162447);
@@ -13,12 +12,12 @@ const Color kAccentColor = Color(0xFF1F4068);
 const Color kButtonColor = Color(0xFF324A7D);
 
 class ScheduledTest {
-  final String projectName;
+  final String testName; // filename+counter
   final DateTime scheduledDateTime;
   final Map<String, dynamic> parameters;
 
   ScheduledTest({
-    required this.projectName,
+    required this.testName,
     required this.scheduledDateTime,
     required this.parameters,
   });
@@ -196,17 +195,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: kAccentColor,
                       height: 32,
                     ),
-                    // Schedule section
+                    // Schedule section with "View All" button
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                      child: Text(
-                        "Schedule",
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Schedule",
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kAccentColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: _openSchedule,
+                            child: const Text('View All'),
+                          ),
+                        ],
                       ),
                     ),
                     if (scheduledTests.isNotEmpty)
@@ -226,13 +241,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: ListView.builder(
                             shrinkWrap: true,
-                            itemCount: scheduledTests.length,
+                            itemCount: scheduledTests.length > 2 ? 2 : scheduledTests.length,
                             itemBuilder: (context, index) {
                               final sched = scheduledTests[index];
                               return ListTile(
                                 leading: const Icon(Icons.timer, color: Colors.white),
                                 title: Text(
-                                  sched.projectName,
+                                  sched.testName,
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                                 ),
                                 subtitle: Text(
@@ -361,6 +376,12 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => HistoryScreen()));
   }
 
+  void _openSchedule() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ScheduleScreen(scheduledTests: scheduledTests),
+    ));
+  }
+
   void _showParameterPrompt(Project project) {
     showDialog(
       context: context,
@@ -368,9 +389,13 @@ class _HomeScreenState extends State<HomeScreen> {
         project: project,
         onRun: (DateTime scheduledDateTime, Map<String, dynamic> params) {
           setState(() {
+            // Compose testName as filename+counter (simulate backend logic)
+            String filename = project.file?.name ?? project.name;
+            int counter = scheduledTests.where((t) => t.testName.startsWith(filename)).length + 1;
+            String testName = "$filename#$counter";
             scheduledTests.add(
               ScheduledTest(
-                projectName: project.name,
+                testName: testName,
                 scheduledDateTime: scheduledDateTime,
                 parameters: params,
               ),
@@ -387,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: kCardColor,
         title: Text(
-          'Test Details: ${sched.projectName}',
+          'Test Details: ${sched.testName}',
           style: const TextStyle(color: Colors.white),
         ),
         content: SingleChildScrollView(
@@ -622,12 +647,22 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
                   numUsers: int.parse(usersController.text),
                   rampUpPeriod: int.parse(rampUpController.text),
                   testDuration: int.parse(testPeriodController.text),
-                  scheduledExecutionTime: scheduledDateTime, 
-                  crudType: '',
+                  scheduledExecutionTime: scheduledDateTime,
+                  crudType: selectedCrud,
                 );
 
                 try {
                   await scheduleLoadTest(request);
+                  widget.onRun(scheduledDateTime, {
+                    'Operation': selectedCrud,
+                    'Users': usersController.text,
+                    'Target URL': urlController.text,
+                    'Ramp-up Period (sec)': rampUpController.text,
+                    'Test Period (min)': testPeriodController.text,
+                    if (showAdvanced && loopController.text.isNotEmpty) 'Loop': loopController.text,
+                    if (showAdvanced && assertionController.text.isNotEmpty) 'Assertion': assertionController.text,
+                    if (showAdvanced && testDataController.text.isNotEmpty) 'Test Data': testDataController.text,
+                  });
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Test scheduled (backend)!')),
