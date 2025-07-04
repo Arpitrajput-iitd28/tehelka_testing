@@ -59,21 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _scheduleTest(Project project, Map<String, dynamic> params, DateTime scheduledDateTime) async {
-  // Build your request object
-  final configRequest = LoadTestConfigRequest(
-    // testName: '', // leave empty, backend will generate
-    targetUrl: params['Target URL'] ?? '',
-    numUsers: int.tryParse(params['Users'] ?? '') ?? 0,
-    rampUpPeriod: int.tryParse(params['Ramp-up Period (sec)'] ?? '') ?? 0,
-    testDuration: int.tryParse(params['Test Period (min)'] ?? '') ?? 0,
-    scheduledExecutionTime: scheduledDateTime.toIso8601String(),
-    crudType: params['Operation'] ?? 'READ',
-    fileName: project.name, // <-- ADD THIS FIELD
-  );
-  await scheduleLoadTest(configRequest);
-}
-
   Future<void> _addProject(String title, PlatformFile? pickedFile) async {
     try {
       final newProject = await createProject(title, pickedFile?.path ?? '');
@@ -90,6 +75,22 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _deleteProject(String projectName) async {
+    try {
+      await deleteProject(projectName);
+      setState(() {
+        projects.removeWhere((p) => p.name == projectName);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Project "$projectName" deleted!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete project: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: kNavyBlue,
         elevation: 0,
         title: const Text(
-          'Tehelka Testing',
+          'Veritas Load',
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -202,16 +203,52 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                                                 )
                                               : null,
-                                          trailing: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: kAccentColor,
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(8),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: kAccentColor,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                ),
+                                                child: const Text('Test'),
+                                                onPressed: () => _showParameterPrompt(project),
                                               ),
-                                            ),
-                                            child: const Text('Test'),
-                                            onPressed: () => _showParameterPrompt(project),
+                                              const SizedBox(width: 8),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                                tooltip: 'Delete Project',
+                                                onPressed: () async {
+                                                  final confirm = await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      backgroundColor: kCardColor,
+                                                      title: const Text('Delete Project', style: TextStyle(color: Colors.white)),
+                                                      content: Text(
+                                                        'Are you sure you want to delete "${project.name}"?',
+                                                        style: const TextStyle(color: Colors.white70),
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () => Navigator.of(context).pop(false),
+                                                          child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () => Navigator.of(context).pop(true),
+                                                          child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  if (confirm == true) {
+                                                    await _deleteProject(project.name);
+                                                  }
+                                                },
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       );
@@ -286,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () async {
                       FilePickerResult? result = await FilePicker.platform.pickFiles(
                         type: FileType.custom,
-                        allowedExtensions: ['csv', 'json', 'pdf'],
+                        allowedExtensions: ['csv', 'json', 'pdf' , "jmx"],
                       );
                       if (result != null && result.files.isNotEmpty) {
                         setStateDialog(() {
@@ -343,6 +380,19 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _scheduleTest(Project project, Map params, DateTime scheduledDateTime) async {
+    final configRequest = LoadTestConfigRequest(
+      targetUrl: params['Target URL'] ?? '',
+      numUsers: int.tryParse(params['Users'] ?? '') ?? 0,
+      rampUpPeriod: int.tryParse(params['Ramp-up Period (sec)'] ?? '') ?? 0,
+      testDuration: int.tryParse(params['Test Period (min)'] ?? '') ?? 0,
+      scheduledExecutionTime: scheduledDateTime.toIso8601String(),
+      // crudType: params['Operation'] ?? 'READ',
+      fileName: project.name,
+    );
+    await scheduleLoadTest(configRequest);
   }
 
   void _showScheduledTestInfo(ScheduledTest sched) {
@@ -410,8 +460,8 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
   TimeOfDay? scheduledTime;
   bool showAdvanced = false;
 
-  final List<String> crudOptions = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
-  String selectedCrud = 'READ';
+  // final List<String> crudOptions = ['CREATE', 'READ', 'UPDATE', 'DELETE'];
+  // String selectedCrud = 'READ';
 
   @override
   Widget build(BuildContext context) {
@@ -427,35 +477,35 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Operation',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: kAccentColor,
-                  enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-                dropdownColor: kAccentColor,
-                value: selectedCrud,
-                iconEnabledColor: Colors.white,
-                style: const TextStyle(color: Colors.white),
-                items: crudOptions
-                    .map((option) => DropdownMenuItem(
-                          value: option,
-                          child: Text(option, style: const TextStyle(color: Colors.white)),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedCrud = value!;
-                  });
-                },
-              ),
+              // DropdownButtonFormField<String>(
+              //   decoration: InputDecoration(
+              //     labelText: 'Operation',
+              //     labelStyle: const TextStyle(color: Colors.white70),
+              //     filled: true,
+              //     fillColor: kAccentColor,
+              //     enabledBorder: const OutlineInputBorder(
+              //       borderSide: BorderSide(color: Colors.white24),
+              //     ),
+              //     focusedBorder: const OutlineInputBorder(
+              //       borderSide: BorderSide(color: Colors.white),
+              //     ),
+              //   ),
+              //   dropdownColor: kAccentColor,
+              //   value: selectedCrud,
+              //   iconEnabledColor: Colors.white,
+              //   style: const TextStyle(color: Colors.white),
+              //   items: crudOptions
+              //       .map((option) => DropdownMenuItem(
+              //             value: option,
+              //             child: Text(option, style: const TextStyle(color: Colors.white)),
+              //           ))
+              //       .toList(),
+              //   onChanged: (value) {
+              //     setState(() {
+              //       selectedCrud = value!;
+              //     });
+              //   },
+              // ),
               const SizedBox(height: 8),
               _darkInput(usersController, 'Users', TextInputType.number),
               const SizedBox(height: 8),
@@ -587,13 +637,13 @@ class _ParameterPromptDialogState extends State<_ParameterPromptDialog> {
                   rampUpPeriod: int.parse(rampUpController.text),
                   testDuration: int.parse(testPeriodController.text),
                   scheduledExecutionTime: scheduledDateTime.toIso8601String(),
-                  crudType: selectedCrud,
+                  // crudType: selectedCrud,
                 );
 
                 try {
                   await scheduleLoadTest(request);
                   widget.onRun(scheduledDateTime, {
-                    'Operation': selectedCrud,
+                    // 'Operation': selectedCrud,
                     'Users': usersController.text,
                     'Target URL': urlController.text,
                     'Ramp-up Period (sec)': rampUpController.text,

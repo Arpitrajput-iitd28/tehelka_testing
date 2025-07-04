@@ -78,14 +78,17 @@ Future<void> downloadReport(String url, String fileName) async {
   await OpenFile.open(filePath); 
 }
 
-// Future<void> deleteProject(String projectName) async {
-//   final response = await http.delete(Uri.parse('$baseUrl/api/load-tests/uploads/$projectName'));
-//   if (response.statusCode == 200 || response.statusCode == 204) {
-//     // Successfully deleted
-//     fetchProjects(); // Refresh the project list
-//   } else {
-//     throw Exception('Failed to delete project: ${response.body}');
-//   }
+Future<void> deleteProject(String projectName) async {
+  final response = await http.delete(Uri.parse('$baseUrl/api/load-tests/delete/$projectName'));
+  if (response.statusCode == 200 || response.statusCode == 204) {
+    // Successfully deleted
+    fetchProjects(); // Refresh the project list
+  } else {
+    throw Exception('Failed to delete project: ${response.body}');
+  }
+}
+
+
 
 // Fetch scheduled tests
 Future<List<ScheduledTest>> fetchSchedule() async {
