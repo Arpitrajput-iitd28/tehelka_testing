@@ -29,9 +29,7 @@ public class LoadTestConfig {
     @Column(name = "test_duration", nullable = false)
     private Integer testDuration;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "crud_type", nullable = false)
-    private CrudType crudType;
+    
     
     @Column(name = "file_name")
     private String fileName;

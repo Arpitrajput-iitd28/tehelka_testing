@@ -19,7 +19,7 @@ public class LoadTestConfigService {
     public LoadTestConfig createConfig(LoadTestConfigRequest request) {
         LoadTestConfig config = new LoadTestConfig();
 
-        config.setCrudType(request.getCrudType());
+        
         config.setTargetUrl(request.getTargetUrl());
         config.setNumUsers(request.getNumUsers());
         config.setRampUpPeriod(request.getRampUpPeriod());
