@@ -2,12 +2,14 @@ package com.load.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter@Setter
 @AllArgsConstructor
+@NoArgsConstructor
 
-public class FileInfo {
-    private String customName;
-    private long size;
+public class ProjectRequest {
+    private String name;
+
 }
