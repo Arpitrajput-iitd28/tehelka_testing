@@ -1,6 +1,7 @@
 package com.load.Controller;
 
 import com.load.DTO.TestRequest;
+import com.load.DTO.TestSummary;
 import com.load.Model.Test;
 import com.load.Service.TestService;
 
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/projects/{projectId}/tests")
@@ -24,10 +26,13 @@ public class TestController {
 
     // 1. Get all tests for a project
     @GetMapping
-    public ResponseEntity<List<Test>> getAllTests(@PathVariable Long projectId) {
-        List<Test> tests = testService.getTestsByProjectId(projectId);
-        return ResponseEntity.ok(tests);
-    }
+public ResponseEntity<List<TestSummary>> getAllTestSummaries(@PathVariable Long projectId) {
+    List<Test> tests = testService.getTestsByProjectId(projectId);
+    List<TestSummary> summaries = tests.stream()
+            .map(t -> new TestSummary(t.getTestName(), t.getCreatedAt()))
+            .collect(Collectors.toList());
+    return ResponseEntity.ok(summaries);
+}
 
     // 2. Get a test by ID
     @GetMapping("/{testId}")

@@ -1,7 +1,7 @@
 package com.load.Controller;
 
 import com.load.DTO.ProjectRequest;
-import com.load.DTO.ProjectSummary;
+
 import com.load.Model.Project;
 import com.load.Service.ProjectService;
 
@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/projects")
@@ -25,12 +25,9 @@ public class ProjectController {
 
     // 1. Get all projects (only name and creation time)
     @GetMapping
-    public ResponseEntity<List<ProjectSummary>> getAllProjects() {
+    public ResponseEntity<List<Project>> getAllProjects() {
         List<Project> projects = projectService.getAllProjects();
-        List<ProjectSummary> summaries = projects.stream()
-                .map(p -> new ProjectSummary(p.getName(), p.getCreatedAt()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(summaries);
+        return ResponseEntity.ok(projects);
     }
 
     // 2. Get a project by ID
