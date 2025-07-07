@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/projects/{projectId}/tests")
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+
 public class TestController {
 
     private final TestService testService;
