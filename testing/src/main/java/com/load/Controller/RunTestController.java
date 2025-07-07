@@ -19,10 +19,10 @@ public class RunTestController {
      * @param projectId The ID of the project to run.
      * @return The path to the JMeter result file or an error message.
      */
-    @PostMapping("/{projectId}")
-    public ResponseEntity<String> runTest(@PathVariable Long projectId) {
+    @PostMapping("/{testId}")
+    public ResponseEntity<String> runTest(@PathVariable Long testId) {
         try {
-            String resultPath = runTestService.runTest(projectId);
+            String resultPath = runTestService.runTest(testId);
             return ResponseEntity.ok("JMeter test executed successfully. Results at: " + resultPath);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to run JMeter test: " + e.getMessage());

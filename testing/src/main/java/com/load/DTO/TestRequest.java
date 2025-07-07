@@ -4,6 +4,7 @@ import com.load.Enums.Action;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import com.load.Enums.Thread;
 
 @Getter
 @Setter

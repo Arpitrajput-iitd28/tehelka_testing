@@ -8,16 +8,11 @@ import jakarta.validation.constraints.Email;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class SignupRequest {
-    @NotBlank
-    private String name;
+public class LoginRequest {
     @NotBlank @Email
     private String email;
     @NotBlank
     private String password;
-    @NotBlank
-    private String confirmPassword;
     
 }
-
 
