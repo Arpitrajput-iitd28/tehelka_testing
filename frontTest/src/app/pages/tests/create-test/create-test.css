@@ -404,3 +404,39 @@
         font-size: 1.125rem;
     }
 }
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.loading-spinner {
+    text-align: center;
+}
+
+.loading-spinner i {
+    font-size: 2rem;
+    color: #3b82f6;
+    margin-bottom: 1rem;
+}
+
+.file-requirement {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    color: #92400e;
+    font-size: 0.875rem;
+}
+
+.file-requirement i {
+    color: #f59e0b;
+}

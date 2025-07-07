@@ -357,89 +357,45 @@
     font-weight: 600;
     color: #374151;
 }
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
+/* Updated Action Buttons - Remove Boxes */
 .btn-action {
     padding: 0.5rem;
     border: none;
-    border-radius: 6px;
+    background: transparent !important; /* Remove colored backgrounds */
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.75rem;
+    font-size: 1rem;
     width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 4px;
 }
 
-.btn-view {
-    background: #dbeafe;
-    color: #1e40af;
+.btn-action:hover {
+    background: rgba(0, 0, 0, 0.1) !important; /* Light hover effect */
+    transform: scale(1.1);
 }
 
-.btn-view:hover {
-    background: #bfdbfe;
-}
+/* Icon-specific colors */
+.btn-view i { color: #3b82f6; }
+.btn-stop i { color: #ef4444; }
+.btn-cancel i { color: #f59e0b; }
+.btn-edit i { color: #10b981; }
+.btn-retry i { color: #8b5cf6; }
+.btn-duplicate i { color: #64748b; }
+.btn-delete i { color: #ef4444; }
 
-.btn-stop {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.btn-stop:hover {
-    background: #fecaca;
-}
-
-.btn-cancel {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.btn-cancel:hover {
-    background: #fde68a;
-}
-
-.btn-edit {
-    background: #e0f2fe;
-    color: #0369a1;
-}
-
-.btn-edit:hover {
-    background: #bae6fd;
-}
-
-.btn-retry {
-    background: #ecfdf5;
-    color: #065f46;
-}
-
-.btn-retry:hover {
-    background: #d1fae5;
-}
-
-.btn-duplicate {
-    background: #f3f4f6;
-    color: #374151;
-}
-
-.btn-duplicate:hover {
-    background: #e5e7eb;
-}
-
+/* Remove all the old background colors */
+.btn-view,
+.btn-stop,
+.btn-cancel,
+.btn-edit,
+.btn-retry,
+.btn-duplicate,
 .btn-delete {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.btn-delete:hover {
-    background: #fecaca;
+    background: transparent !important;
 }
 
 /* Empty State */
@@ -696,4 +652,42 @@
     .search-box {
         max-width: 100%;
     }
+}
+.action-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+
+.test-comments {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-style: italic;
+    margin-top: 0.25rem;
+}
+
+.action-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.scheduled-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #059669;
+}
+
+.not-scheduled {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #64748b;
 }

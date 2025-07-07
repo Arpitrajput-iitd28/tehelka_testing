@@ -11,6 +11,7 @@ import com.load.Service.ReportService;
 
 @RestController
 @RequestMapping("/api/reports")
+@CrossOrigin(origins = "http://localhost:4200" , allowCredentials = "true")
 public class ReportController {
 
     private final ReportService reportService;

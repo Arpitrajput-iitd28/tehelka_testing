@@ -1,157 +1,333 @@
 <app-layout pageTitle="Dashboard">
-  <!-- Quick Stats Cards -->
-  <section class="stats-section">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-play-circle"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{totalTests}}</h3>
-          <p>Total Tests</p>
-        </div>
+  <div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header">
+      <div class="header-content">
+        <h1>Performance Dashboard</h1>
+        <p>Real-time insights into your load testing platform</p>
       </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-clock"></i>
+      <div class="header-controls">
+        <div class="time-range-selector">
+          <select [(ngModel)]="selectedTimeRange" (change)="onTimeRangeChange()">
+            <option value="1h">Last Hour</option>
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+          </select>
         </div>
-        <div class="stat-content">
-          <h3>{{runningTests}}</h3>
-          <p>Running Tests</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{completedTests}}</h3>
-          <p>Completed</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="stat-content">
-          <h3>{{failedTests}}</h3>
-          <p>Failed Tests</p>
+        <button class="btn-refresh" (click)="refreshDashboard()">
+          <i class="fas fa-sync-alt"></i>
+          Refresh
+        </button>
+        <div class="last-updated">
+          Last updated: {{lastUpdated | date:'short'}}
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- Recent Tests Table -->
-  <section class="tests-section">
-    <div class="section-header">
-      <h2>Recent Tests</h2>
-      <div class="filter-controls">
-        <select [(ngModel)]="statusFilter" (change)="filterTests()">
-          <option value="">All Status</option>
-          <option value="RUNNING">Running</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="FAILED">Failed</option>
-          <option value="SCHEDULED">Scheduled</option>
-        </select>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading dashboard data...</p>
       </div>
     </div>
-    
-    <div class="tests-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Test Name</th>
-            <th>Project</th>
-            <th>Status</th>
-            <th>Start Time</th>
-            <th>Duration</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let test of filteredTests" [class]="'status-' + test.status.toLowerCase()">
-            <td>{{test.name}}</td>
-            <td>{{test.projectName}}</td>
-            <td>
-              <span class="status-badge" [class]="'status-' + test.status.toLowerCase()">
-                {{test.status}}
-              </span>
-            </td>
-            <td>{{test.startTime | date:'medium'}}</td>
-            <td>{{test.duration || 'N/A'}}</td>
-            <td class="actions">
-              <button *ngIf="test.status === 'COMPLETED'" (click)="viewReport(test.id)" class="btn-view">
-                <i class="fas fa-chart-line"></i> View Report
-              </button>
-              <button *ngIf="test.status === 'RUNNING'" (click)="stopTest(test.id)" class="btn-stop">
-                <i class="fas fa-stop"></i> Stop
-              </button>
-              <button *ngIf="test.status === 'SCHEDULED'" (click)="cancelTest(test.id)" class="btn-cancel">
-                <i class="fas fa-times"></i> Cancel
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
 
-  <!-- Create Test Modal -->
-  <div *ngIf="showCreateTestModal" class="modal-overlay" (click)="closeModal($event)">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Create New Load Test</h3>
-        <button (click)="showCreateTestModal = false" class="close-btn">×</button>
-      </div>
+    <!-- Dashboard Content -->
+    <div *ngIf="!isLoading" class="dashboard-content">
       
-      <form [formGroup]="createTestForm" (ngSubmit)="createTest()" class="test-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Test Name</label>
-            <input type="text" formControlName="testName" placeholder="Enter test name">
+      <!-- KPI Cards Section -->
+      <div class="kpi-section">
+        <h2>System Health Overview</h2>
+        <div class="kpi-grid">
+          <div class="kpi-card" [class]="getHealthScoreClass()">
+            <div class="kpi-icon">
+              <i class="fas fa-heartbeat"></i>
+            </div>
+            <div class="kpi-content">
+              <h3>{{kpiMetrics.systemHealthScore}}%</h3>
+              <p>System Health Score</p>
+              <div class="kpi-trend">
+                <i class="fas fa-arrow-up trend-up"></i>
+                <span>+2.3% from yesterday</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="form-group">
-            <label>Project Name</label>
-            <input type="text" formControlName="projectName" placeholder="Enter project name">
+
+          <div class="kpi-card">
+            <div class="kpi-icon active">
+              <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="kpi-content">
+              <h3>{{kpiMetrics.activeTests}}</h3>
+              <p>Active Tests</p>
+              <div class="kpi-trend">
+                <i class="fas fa-minus trend-stable"></i>
+                <span>No change</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon availability">
+              <i class="fas fa-globe"></i>
+            </div>
+            <div class="kpi-content">
+              <h3>{{kpiMetrics.apiAvailability}}%</h3>
+              <p>API Availability</p>
+              <div class="kpi-trend">
+                <i class="fas fa-arrow-up trend-up"></i>
+                <span>+0.5% from yesterday</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card" [class]="kpiMetrics.criticalAlerts > 0 ? 'critical' : 'good'">
+            <div class="kpi-icon alerts">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="kpi-content">
+              <h3>{{kpiMetrics.criticalAlerts}}</h3>
+              <p>Critical Alerts</p>
+              <div class="kpi-trend">
+                <i class="fas fa-arrow-down trend-down"></i>
+                <span>-2 from yesterday</span>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- Performance Metrics Section - Restructured -->
+      <div class="performance-section">
+        <h2>Performance Metrics</h2>
         
-        <div class="form-group">
-          <label>Test Script</label>
-          <div class="file-upload-section">
-            <input type="file" (change)="onFileSelected($event)" accept=".jmx,.js,.yaml">
-            <span>Or select from GitHub repository</span>
-            <input type="text" formControlName="githubUrl" placeholder="GitHub repository URL">
+        <!-- Charts Side by Side -->
+        <div class="charts-container">
+          <!-- Response Time Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Response Time Trend</h3>
+              <div class="metric-value" [class]="getResponseTimeClass()">
+                {{performanceMetrics.averageResponseTime}}ms avg
+              </div>
+            </div>
+            <div class="chart-wrapper" *ngIf="showCharts">
+              <canvas baseChart
+                #responseTimeChart
+                [data]="responseTimeChartData"
+                [options]="responseTimeChartOptions"
+                type="line">
+              </canvas>
+            </div>
+          </div>
+
+          <!-- Error Rate Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Error Rate Trend</h3>
+              <div class="metric-value" [class]="getErrorRateClass()">
+                {{performanceMetrics.errorRate}}% avg
+              </div>
+            </div>
+            <div class="chart-wrapper" *ngIf="showCharts">
+              <canvas baseChart
+                #errorRateChart
+                [data]="errorRateChartData"
+                [options]="errorRateChartOptions"
+                type="bar">
+              </canvas>
+            </div>
           </div>
         </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label>Virtual Users</label>
-            <input type="number" formControlName="virtualUsers" placeholder="Number of users">
+
+        <!-- Performance Info Cards Below Charts -->
+        <div class="performance-info-grid">
+          <!-- RPS -->
+          <div class="info-card">
+            <div class="info-header">
+              <h4>Requests/Second</h4>
+              <div class="info-value good">
+                {{formatNumber(performanceMetrics.requestsPerSecond)}}
+              </div>
+            </div>
+            <div class="gauge-container">
+              <div class="gauge">
+                <div class="gauge-fill" [style.width.%]="(performanceMetrics.requestsPerSecond / 2000) * 100"></div>
+              </div>
+              <div class="gauge-labels">
+                <span>0</span>
+                <span>2K</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="form-group">
-            <label>Duration (minutes)</label>
-            <input type="number" formControlName="duration" placeholder="Test duration">
+
+          <!-- Latency Percentiles -->
+          <div class="info-card">
+            <div class="info-header">
+              <h4>Latency Percentiles</h4>
+            </div>
+            <div class="percentile-list">
+              <div class="percentile-item">
+                <span class="percentile-label">P95</span>
+                <span class="percentile-value">{{performanceMetrics.latencyP95}}ms</span>
+              </div>
+              <div class="percentile-item">
+                <span class="percentile-label">P99</span>
+                <span class="percentile-value">{{performanceMetrics.latencyP99}}ms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Metrics -->
+          <div class="info-card">
+            <div class="info-header">
+              <h4>System Load</h4>
+            </div>
+            <div class="system-metrics">
+              <div class="metric-row">
+                <span>CPU Usage</span>
+                <span class="metric-value-small">{{randomBetween(45, 85)}}%</span>
+              </div>
+              <div class="metric-row">
+                <span>Memory Usage</span>
+                <span class="metric-value-small">{{randomBetween(60, 90)}}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Throughput -->
+          <div class="info-card">
+            <div class="info-header">
+              <h4>Throughput</h4>
+            </div>
+            <div class="throughput-metrics">
+              <div class="metric-row">
+                <span>Total Requests</span>
+                <span class="metric-value-small">{{formatNumber(randomBetween(50000, 150000))}}</span>
+              </div>
+              <div class="metric-row">
+                <span>Success Rate</span>
+                <span class="metric-value-small success">{{randomBetween(95, 99)}}%</span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div class="form-group">
-          <label>Schedule Test</label>
-          <input type="datetime-local" formControlName="scheduleTime">
-          <small>Leave empty to run immediately</small>
+      </div>
+
+      <!-- Pipeline Status Section -->
+      <div class="pipeline-section">
+        <h2>Pipeline Status</h2>
+        <div class="pipeline-grid">
+          <div class="pipeline-card running">
+            <div class="pipeline-icon">
+              <i class="fas fa-play"></i>
+            </div>
+            <div class="pipeline-content">
+              <h3>{{pipelineStatus.running}}</h3>
+              <p>Running</p>
+            </div>
+          </div>
+
+          <div class="pipeline-card successful">
+            <div class="pipeline-icon">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="pipeline-content">
+              <h3>{{pipelineStatus.successful}}</h3>
+              <p>Successful</p>
+            </div>
+          </div>
+
+          <div class="pipeline-card failed">
+            <div class="pipeline-icon">
+              <i class="fas fa-times"></i>
+            </div>
+            <div class="pipeline-content">
+              <h3>{{pipelineStatus.failed}}</h3>
+              <p>Failed</p>
+            </div>
+          </div>
+
+          <div class="pipeline-card scheduled">
+            <div class="pipeline-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="pipeline-content">
+              <h3>{{pipelineStatus.scheduled}}</h3>
+              <p>Scheduled</p>
+            </div>
+          </div>
+
+          <div class="pipeline-card queued">
+            <div class="pipeline-icon">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="pipeline-content">
+              <h3>{{pipelineStatus.queuedTests}}</h3>
+              <p>In Queue</p>
+            </div>
+          </div>
         </div>
-        
-        <div class="modal-actions">
-          <button type="button" (click)="showCreateTestModal = false" class="btn-secondary">Cancel</button>
-          <button type="submit" [disabled]="createTestForm.invalid" class="btn-primary">Create Test</button>
+      </div>
+
+      <!-- Bottom Section -->
+      <div class="bottom-section">
+        <!-- Top Slow Endpoints -->
+        <div class="endpoints-card">
+          <div class="card-header">
+            <h3>Slowest Endpoints</h3>
+            <button class="btn-link" routerLink="/reports">View All</button>
+          </div>
+          <div class="endpoints-list">
+            <!-- Add safe navigation and null check -->
+            <div *ngFor="let endpoint of (topSlowEndpoints || [])" class="endpoint-item">
+              <div class="endpoint-info">
+                <span class="endpoint-name">{{endpoint.name}}</span>
+                <span class="endpoint-requests">{{formatNumber(endpoint.requestCount)}} requests</span>
+              </div>
+              <div class="endpoint-metrics">
+                <span class="response-time">{{endpoint.averageResponseTime}}ms</span>
+                <span class="error-rate" [class]="endpoint.errorRate > 2 ? 'high' : 'low'">
+                  {{endpoint.errorRate}}% errors
+                </span>
+              </div>
+            </div>
+            
+            <!-- Add empty state when no endpoints -->
+            <div *ngIf="!topSlowEndpoints || topSlowEndpoints.length === 0" class="no-data">
+              <p>No endpoint data available</p>
+            </div>
+          </div>
         </div>
-      </form>
+
+        <!-- Recent Tests -->
+        <div class="recent-tests-card">
+          <div class="card-header">
+            <h3>Recent Test Results</h3>
+            <button class="btn-link" routerLink="/tests">View All</button>
+          </div>
+          <div class="tests-list">
+            <!-- Add safe navigation and null check -->
+            <div *ngFor="let test of (recentTests || []).slice(0, 5)" class="test-item">
+              <div class="test-info">
+                <span class="test-name">{{test.name}}</span>
+                <span class="test-time">{{test.startTime | date:'short'}}</span>
+              </div>
+              <div class="test-metrics">
+                <span class="status-badge" [class]="getStatusClass(test.status)">
+                  {{test.status | titlecase}}
+                </span>
+                <span class="test-duration">{{test.duration}}</span>
+              </div>
+            </div>
+            
+            <!-- Add empty state when no tests -->
+            <div *ngIf="!recentTests || recentTests.length === 0" class="no-data">
+              <p>No recent tests available</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </app-layout>

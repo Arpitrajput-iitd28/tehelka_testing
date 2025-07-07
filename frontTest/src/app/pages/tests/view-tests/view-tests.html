@@ -138,6 +138,7 @@
                   <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'project' && sortDirection === 'asc'"
                      [class.fa-sort-down]="sortField === 'project' && sortDirection === 'desc'"></i>
                 </th>
+                <th>Action</th>
                 <th>Type</th>
                 <th (click)="sortBy('status')" class="sortable">
                   Status
@@ -149,9 +150,10 @@
                   <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'createdAt' && sortDirection === 'asc'"
                      [class.fa-sort-down]="sortField === 'createdAt' && sortDirection === 'desc'"></i>
                 </th>
-                <th>Duration</th>
                 <th>Virtual Users</th>
-                <th>Success Rate</th>
+                <th>Ramp Up</th>
+                <th>Duration</th>
+                <th>Scheduled</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -162,10 +164,14 @@
                   <div class="test-name">
                     <strong>{{test.testName}}</strong>
                     <small>{{test.fileName}}</small>
+                    <div *ngIf="test.comments" class="test-comments">{{test.comments}}</div>
                   </div>
                 </td>
                 <td>
-                  <span class="project-badge">{{test.project}}</span>
+                  <span class="project-badge">{{test.project.name}}</span>
+                </td>
+                <td>
+                  <span class="action-badge">{{test.action}}</span>
                 </td>
                 <td>
                   <span class="type-badge" [class]="getTypeClass(test.type)">{{test.type | titlecase}}</span>
@@ -181,16 +187,18 @@
                   </span>
                 </td>
                 <td>{{formatDate(test.createdAt) | date:'medium'}}</td>
-                <td>{{test.duration}}</td>
                 <td>{{test.numUsers | number}}</td>
+                <td>{{test.rampUpPeriod}}s</td>
+                <td>{{test.duration}}</td>
                 <td>
-                  <div class="success-rate" *ngIf="test.successRate !== null && test.successRate !== undefined">
-                    <div class="progress-bar">
-                      <div class="progress-fill" [style.width.%]="test.successRate"></div>
-                    </div>
-                    <span>{{test.successRate}}%</span>
-                  </div>
-                  <span *ngIf="test.successRate === null || test.successRate === undefined">-</span>
+                  <span *ngIf="test.scheduled" class="scheduled-badge">
+                    <i class="fas fa-clock"></i>
+                    {{test.scheduledExecutionTime ? (formatDate(test.scheduledExecutionTime) | date:'short') : 'Yes'}}
+                  </span>
+                  <span *ngIf="!test.scheduled" class="not-scheduled">
+                    <i class="fas fa-times"></i>
+                    No
+                  </span>
                 </td>
                 <td>
                   <div class="action-buttons">
@@ -198,47 +206,47 @@
                             (click)="viewReport(test.id)" 
                             class="btn-action btn-view" 
                             title="View Report">
-                      <i class="fas fa-chart-line"></i>
+                      <img src="view.png" alt="View Report" class="action-icon">
                     </button>
                     
                     <button *ngIf="canStopTest(test)" 
                             (click)="stopTest(test.id)" 
                             class="btn-action btn-stop" 
                             title="Stop Test">
-                      <i class="fas fa-stop"></i>
+                      <img src="stop-test.png" alt="Stop Test" class="action-icon">
                     </button>
                     
                     <button *ngIf="canCancelTest(test)" 
                             (click)="cancelTest(test.id)" 
                             class="btn-action btn-cancel" 
                             title="Cancel Test">
-                      <i class="fas fa-times"></i>
+                      <img src="cancel-test.png" alt="Cancel Test" class="action-icon">
                     </button>
                     
                     <button *ngIf="test.status === 'DRAFT'" 
                             (click)="editTest(test.id)" 
                             class="btn-action btn-edit" 
                             title="Edit Test">
-                      <i class="fas fa-edit"></i>
+                      <img src="edit-test.png" alt="Edit Test" class="action-icon">
                     </button>
                     
                     <button *ngIf="canRetryTest(test)" 
                             (click)="retryTest(test.id)" 
                             class="btn-action btn-retry" 
                             title="Retry Test">
-                      <i class="fas fa-redo"></i>
+                      <img src="retry-test.png" alt="Retry Test" class="action-icon">
                     </button>
                     
                     <button (click)="duplicateTest(test.id)" 
                             class="btn-action btn-duplicate" 
                             title="Duplicate Test">
-                      <i class="fas fa-copy"></i>
+                      <img src="copy.png" alt="Duplicate Test" class="action-icon">
                     </button>
                     
                     <button (click)="deleteTest(test.id)" 
                             class="btn-action btn-delete" 
                             title="Delete Test">
-                      <i class="fas fa-trash"></i>
+                      <img src="trash.png" alt="Delete Test" class="action-icon">
                     </button>
                   </div>
                 </td>

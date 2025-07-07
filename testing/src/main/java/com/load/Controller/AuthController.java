@@ -12,6 +12,7 @@ import com.load.Service.AuthService;
 
 @RestController
 @RequestMapping("/api/auth")
+
 public class AuthController {
 
     private final AuthService authService;

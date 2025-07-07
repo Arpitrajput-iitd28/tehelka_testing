@@ -1,219 +1,464 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { LayoutComponent } from  '../../shared/layout/layout';
-
-interface LoadTest {
-  id: string;
-  name: string;
-  projectName: string;
-  status: 'RUNNING' | 'COMPLETED' | 'FAILED' | 'SCHEDULED';
-  startTime: Date;
-  duration?: string;
-  virtualUsers: number;
-}
+import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
+import { LayoutComponent } from '../../shared/layout/layout';
+import { ChangeDetectorRef } from '@angular/core';
+import { 
+  DashboardService, 
+  KPIMetrics, 
+  PerformanceMetrics, 
+  PipelineStatus,
+  TopEndpoint,
+  RecentTest 
+} from './dashboard-service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, LayoutComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, BaseChartDirective],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
-export class DashboardComponent implements OnInit {
-  // Dashboard stats
-  totalTests = 25;
-  runningTests = 3;
-  completedTests = 20;
-  failedTests = 2;
+export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('responseTimeChart') responseTimeChart!: BaseChartDirective;
+  @ViewChild('errorRateChart') errorRateChart!: BaseChartDirective;
+  
+  // Add flag to force chart re-render
+  private chartRenderKey = 0;
+  showCharts = true;
+  private viewInitialized = false;
 
-  // Tests data
-  allTests: LoadTest[] = [];
-  filteredTests: LoadTest[] = [];
-  statusFilter = '';
+  // Data properties - Initialize to prevent undefined errors
+  kpiMetrics: KPIMetrics = {
+    systemHealthScore: 0,
+    activeTests: 0,
+    apiAvailability: 0,
+    criticalAlerts: 0
+  };
+
+  performanceMetrics: PerformanceMetrics = {
+    averageResponseTime: 0,
+    errorRate: 0,
+    requestsPerSecond: 0,
+    latencyP95: 0,
+    latencyP99: 0
+  };
+
+  pipelineStatus: PipelineStatus = {
+    running: 0,
+    successful: 0,
+    failed: 0,
+    scheduled: 0,
+    queuedTests: 0
+  };
+
+  // Initialize arrays to prevent undefined errors
+  topSlowEndpoints: TopEndpoint[] = [];
+  recentTests: RecentTest[] = [];
+
+  // Chart data - Initialize to prevent undefined errors
+  responseTimeChartData: ChartData<'line'> = { 
+    labels: [], 
+    datasets: [] 
+  };
+  errorRateChartData: ChartData<'bar'> = { 
+    labels: [], 
+    datasets: [] 
+  };
+  
+  // Chart configurations with updated resize handling
+  responseTimeChartOptions: ChartConfiguration<'line'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    resizeDelay: 0, // Immediate resize
+    animation: false, // Disable animations completely
+    scales: {
+        y: {
+            beginAtZero: true,
+            title: {
+                display: true,
+                text: 'Response Time (ms)'
+            }
+        },
+        x: {
+            title: {
+                display: true,
+                text: 'Time'
+            }
+        }
+    },
+    plugins: {
+        legend: {
+            display: true,
+            position: 'top'
+        }
+    }
+  };
+
+errorRateChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    resizeDelay: 0, // Immediate resize
+    animation: false, // Disable animations completely
+    scales: {
+        y: {
+            beginAtZero: true,
+            title: {
+                display: true,
+                text: 'Error Rate (%)'
+            }
+        },
+        x: {
+            title: {
+                display: true,
+                text: 'Time'
+            }
+        }
+    },
+    plugins: {
+        legend: {
+            display: true,
+            position: 'top'
+        }
+    }
+};
+  // Fix: Use string literals instead of ChartType
+  responseTimeChartType: 'line' = 'line';
+  errorRateChartType: 'bar' = 'bar';
 
   // UI state
-  showCreateTestModal = false;
-  
-  // Forms
-  createTestForm: FormGroup;
+  selectedTimeRange: '1h' | '24h' | '7d' = '24h';
+  isLoading = true;
+  lastUpdated = new Date();
+
+  // Subscriptions
+  private subscriptions: Subscription[] = [];
+  private sidebarEventListener?: () => void;
+
+  // Cache for random values to prevent ExpressionChangedAfterItHasBeenCheckedError
+  private randomValueCache = new Map<string, number>();
 
   constructor(
-    private formBuilder: FormBuilder,
-    private router: Router
-  ) {
-    this.createTestForm = this.formBuilder.group({
-      testName: ['', Validators.required],
-      projectName: ['', Validators.required],
-      githubUrl: [''],
-      virtualUsers: [10, [Validators.required, Validators.min(1)]],
-      duration: [5, [Validators.required, Validators.min(1)]],
-      scheduleTime: ['']
+    private dashboardService: DashboardService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    // Start real-time updates for KPI data immediately
+    this.startRealTimeUpdates();
+  }
+
+  ngAfterViewInit(): void {
+    // Mark view as initialized
+    this.viewInitialized = true;
+    
+    // Create a proper event listener reference for cleanup
+    this.sidebarEventListener = () => {
+      this.handleSidebarToggle();
+    };
+    
+    window.addEventListener('sidebarToggled', this.sidebarEventListener);
+    
+    // Load dashboard data after view is initialized
+    // Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      this.loadDashboardData();
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    
+    // Properly remove event listener
+    if (this.sidebarEventListener) {
+      window.removeEventListener('sidebarToggled', this.sidebarEventListener);
+    }
+  }
+
+  private handleSidebarToggle(): void {
+    console.log('Sidebar toggled - forcing chart re-render');
+    
+    // Method 1: Force complete chart re-render
+    this.forceChartRerender();
+    
+    // Method 2: Try multiple resize approaches
+    setTimeout(() => {
+      this.multipleResizeAttempts();
+    }, 400);
+  }
+
+  private forceChartRerender(): void {
+    // Hide charts temporarily
+    this.showCharts = false;
+    this.cdr.detectChanges();
+    
+    // Show charts again after a brief delay
+    setTimeout(() => {
+      this.showCharts = true;
+      this.chartRenderKey++;
+      this.cdr.detectChanges();
+    }, 100);
+  }
+
+  private multipleResizeAttempts(): void {
+    // Attempt 1: Window resize event
+    window.dispatchEvent(new Event('resize'));
+    
+    // Attempt 2: Direct chart resize
+    setTimeout(() => {
+      if (this.responseTimeChart?.chart) {
+        this.responseTimeChart.chart.resize();
+        this.responseTimeChart.chart.update('none');
+      }
+      if (this.errorRateChart?.chart) {
+        this.errorRateChart.chart.resize();
+        this.errorRateChart.chart.update('none');
+      }
+    }, 50);
+    
+    // Attempt 3: Force container reflow
+    setTimeout(() => {
+      this.forceContainerReflow();
+    }, 100);
+    
+    // Attempt 4: Final resize attempt
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 200);
+  }
+
+  private forceContainerReflow(): void {
+    const chartContainers = document.querySelectorAll('.chart-wrapper');
+    chartContainers.forEach(container => {
+      const element = container as HTMLElement;
+      const display = element.style.display;
+      element.style.display = 'none';
+      element.offsetHeight; // Force reflow
+      element.style.display = display;
     });
   }
 
-  ngOnInit(): void {
-    this.loadDashboardData();
-    this.loadTests();
-  }
-
   loadDashboardData(): void {
-    // Mock data - replace with actual API calls
-    this.totalTests = 25;
-    this.runningTests = 3;
-    this.completedTests = 20;
-    this.failedTests = 2;
+    this.isLoading = true;
+
+    // Load chart data with error handling
+    this.subscriptions.push(
+      this.dashboardService.getResponseTimeChartData(this.selectedTimeRange).subscribe({
+        next: (data) => {
+          this.responseTimeChartData = data;
+          console.log('Response time chart data loaded:', data);
+          
+          // Force change detection after data is loaded
+          this.cdr.detectChanges();
+          this.ensureChartsRender();
+        },
+        error: (error) => {
+          console.error('Error loading response time data:', error);
+          this.responseTimeChartData = { labels: [], datasets: [] };
+          this.cdr.detectChanges();
+        }
+      }),
+
+      this.dashboardService.getErrorRateChartData(this.selectedTimeRange).subscribe({
+        next: (data) => {
+          this.errorRateChartData = data;
+          console.log('Error rate chart data loaded:', data);
+          
+          // Force change detection after data is loaded
+          this.cdr.detectChanges();
+          this.ensureChartsRender();
+        },
+        error: (error) => {
+          console.error('Error loading error rate data:', error);
+          this.errorRateChartData = { labels: [], datasets: [] };
+          this.cdr.detectChanges();
+        }
+      }),
+
+      this.dashboardService.getTopSlowEndpoints().subscribe({
+        next: (data) => {
+          this.topSlowEndpoints = data || [];
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading endpoints:', error);
+          this.topSlowEndpoints = [];
+          this.cdr.detectChanges();
+        }
+      }),
+
+      this.dashboardService.getRecentTests().subscribe({
+        next: (data) => {
+          this.recentTests = data || [];
+          this.isLoading = false;
+          
+          // Final change detection and ensure everything is rendered
+          this.cdr.detectChanges();
+          this.ensureChartsRender();
+        },
+        error: (error) => {
+          console.error('Error loading recent tests:', error);
+          this.recentTests = [];
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      })
+    );
   }
 
-  loadTests(): void {
-    // Mock data - replace with actual API calls
-    this.allTests = [
-      {
-        id: '1',
-        name: 'API Performance Test',
-        projectName: 'E-commerce API',
-        status: 'COMPLETED',
-        startTime: new Date('2025-07-01T10:30:00'),
-        duration: '5m 23s',
-        virtualUsers: 100
-      },
-      {
-        id: '2',
-        name: 'Database Stress Test',
-        projectName: 'User Management',
-        status: 'RUNNING',
-        startTime: new Date('2025-07-01T14:15:00'),
-        virtualUsers: 50
-      },
-      {
-        id: '3',
-        name: 'Frontend Load Test',
-        projectName: 'Dashboard UI',
-        status: 'SCHEDULED',
-        startTime: new Date('2025-07-01T16:00:00'),
-        virtualUsers: 200
-      },
-      {
-        id: '4',
-        name: 'Authentication Service Test',
-        projectName: 'Auth Service',
-        status: 'FAILED',
-        startTime: new Date('2025-07-01T12:00:00'),
-        duration: '2m 15s',
-        virtualUsers: 75
-      },
-      {
-        id: '5',
-        name: 'Payment Gateway Test',
-        projectName: 'Payment System',
-        status: 'COMPLETED',
-        startTime: new Date('2025-07-01T09:45:00'),
-        duration: '8m 42s',
-        virtualUsers: 150
+  private ensureChartsRender(): void {
+    if (!this.viewInitialized) return;
+    
+    // Additional rendering assistance for charts
+    setTimeout(() => {
+      if (this.responseTimeChart?.chart) {
+        this.responseTimeChart.chart.update('none');
       }
-    ];
-    this.filteredTests = [...this.allTests];
-  }
-
-  filterTests(): void {
-    if (this.statusFilter) {
-      this.filteredTests = this.allTests.filter(test => test.status === this.statusFilter);
-    } else {
-      this.filteredTests = [...this.allTests];
-    }
-  }
-
-  createTest(): void {
-    if (this.createTestForm.valid) {
-      const formData = this.createTestForm.value;
-      console.log('Creating test:', formData);
-      
-      // Create new test object
-      const newTest: LoadTest = {
-        id: (this.allTests.length + 1).toString(),
-        name: formData.testName,
-        projectName: formData.projectName,
-        status: formData.scheduleTime ? 'SCHEDULED' : 'RUNNING',
-        startTime: formData.scheduleTime ? new Date(formData.scheduleTime) : new Date(),
-        virtualUsers: formData.virtualUsers
-      };
-
-      // Add to tests array
-      this.allTests.unshift(newTest);
-      this.filterTests();
-      
-      // Update stats
-      this.totalTests++;
-      if (newTest.status === 'SCHEDULED') {
-        // Will be handled by scheduler
-      } else {
-        this.runningTests++;
+      if (this.errorRateChart?.chart) {
+        this.errorRateChart.chart.update('none');
       }
       
-      // Close modal and reset form
-      this.showCreateTestModal = false;
-      this.createTestForm.reset({
-        virtualUsers: 10,
-        duration: 5
-      });
-      
-      console.log('Test created successfully!');
+      // Trigger a window resize to ensure proper chart sizing
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
+  }
+
+  startRealTimeUpdates(): void {
+    // Real-time KPI updates with continuous refresh
+    this.subscriptions.push(
+      this.dashboardService.getKPIMetrics().subscribe({
+        next: (data) => {
+          this.kpiMetrics = data;
+          this.lastUpdated = new Date();
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading KPI metrics:', error);
+        }
+      }),
+
+      this.dashboardService.getPerformanceMetrics().subscribe({
+        next: (data) => {
+          this.performanceMetrics = data;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading performance metrics:', error);
+        }
+      }),
+
+      this.dashboardService.getPipelineStatus().subscribe({
+        next: (data) => {
+          this.pipelineStatus = data;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error loading pipeline status:', error);
+        }
+      })
+    );
+
+    // Start continuous data refresh for charts and other dynamic content
+    this.startContinuousRefresh();
+  }
+
+  private startContinuousRefresh(): void {
+    // Refresh chart data every 5 seconds
+    const chartRefreshInterval = setInterval(() => {
+      if (!this.isLoading) {
+        this.loadDashboardData();
+      }
+    }, 5000);
+
+    // Refresh endpoints and tests every 10 seconds
+    const endpointRefreshInterval = setInterval(() => {
+      this.refreshEndpointsAndTests();
+    }, 10000);
+
+    // Store intervals for cleanup
+    this.subscriptions.push(
+      {
+        unsubscribe: () => {
+          clearInterval(chartRefreshInterval);
+          clearInterval(endpointRefreshInterval);
+        }
+      } as any
+    );
+  }
+
+  private refreshEndpointsAndTests(): void {
+    this.subscriptions.push(
+      this.dashboardService.getTopSlowEndpoints().subscribe({
+        next: (data) => {
+          this.topSlowEndpoints = data || [];
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error refreshing endpoints:', error);
+        }
+      }),
+
+      this.dashboardService.getRecentTests().subscribe({
+        next: (data) => {
+          this.recentTests = data || [];
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error refreshing tests:', error);
+        }
+      })
+    );
+  }
+
+  onTimeRangeChange(): void {
+    this.loadDashboardData();
+  }
+
+  refreshDashboard(): void {
+    this.loadDashboardData();
+    this.refreshEndpointsAndTests();
+    this.lastUpdated = new Date();
+  }
+
+  // Utility methods for templates
+  getHealthScoreClass(): string {
+    if (this.kpiMetrics.systemHealthScore >= 95) return 'excellent';
+    if (this.kpiMetrics.systemHealthScore >= 85) return 'good';
+    if (this.kpiMetrics.systemHealthScore >= 70) return 'warning';
+    return 'critical';
+  }
+
+  getErrorRateClass(): string {
+    if (this.performanceMetrics.errorRate <= 1) return 'good';
+    if (this.performanceMetrics.errorRate <= 3) return 'warning';
+    return 'critical';
+  }
+
+  getResponseTimeClass(): string {
+    if (this.performanceMetrics.averageResponseTime <= 200) return 'excellent';
+    if (this.performanceMetrics.averageResponseTime <= 500) return 'good';
+    if (this.performanceMetrics.averageResponseTime <= 1000) return 'warning';
+    return 'critical';
+  }
+
+  getStatusClass(status: string): string {
+    return `status-${status.toLowerCase()}`;
+  }
+
+  formatNumber(num: number): string {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
     }
+    return num.toString();
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      console.log('File selected:', file.name);
-      // Handle file upload logic here
-      // You can add file validation, upload to server, etc.
-    }
-  }
-
-  viewReport(testId: string): void {
-    console.log('Viewing report for test:', testId);
-    this.router.navigate(['/reports', testId]);
-  }
-
-  stopTest(testId: string): void {
-    console.log('Stopping test:', testId);
-    
-    // Find and update the test
-    const testIndex = this.allTests.findIndex(test => test.id === testId);
-    if (testIndex !== -1) {
-      this.allTests[testIndex].status = 'FAILED';
-      this.allTests[testIndex].duration = '2m 30s'; // Mock duration
-      
-      // Update stats
-      this.runningTests--;
-      this.failedTests++;
-      
-      this.filterTests();
-      console.log('Test stopped successfully');
-    }
-  }
-
-  cancelTest(testId: string): void {
-    console.log('Cancelling test:', testId);
-    
-    // Remove the test from the list
-    this.allTests = this.allTests.filter(test => test.id !== testId);
-    this.totalTests--;
-    
-    this.filterTests();
-    console.log('Test cancelled successfully');
-  }
-
-  closeModal(event: Event): void {
-    if (event.target === event.currentTarget) {
-      this.showCreateTestModal = false;
-    }
-  }
-
-  // Method to open create test modal (can be called from sidebar)
-  openCreateTestModal(): void {
-    this.showCreateTestModal = true;
+  randomBetween(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }
