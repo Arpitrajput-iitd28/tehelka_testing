@@ -1,19 +1,50 @@
-// signup.dart
-
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'login.dart';
+import 'project_service.dart'; // Import your API service
 
 const Color kBlack = Colors.black;
 const Color kDarkBlue = Color(0xFF0A1A2F);
 const Color kBisque = Color(0xFFFFE4C4);
 
-class SignupPage extends StatelessWidget {
+class SignupPage extends StatefulWidget {
   const SignupPage({Key? key}) : super(key: key);
 
-  void _goToHome(BuildContext context) {
+  @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+class _SignupPageState extends State<SignupPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  bool loading = false;
+
+  void _goToLogin() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
+  }
+
+  void _signUp() async {
+    setState(() => loading = true);
+    final success = await registerUser(
+      email: emailController.text,
+      name: nameController.text,
+      password: passwordController.text,
+      confirmPassword: confirmPasswordController.text,
+    );
+    setState(() => loading = false);
+    if (success) {
+      _goToLogin();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signup successful! Please log in.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signup failed. Please check your details.')),
+      );
+    }
   }
 
   @override
@@ -46,13 +77,13 @@ class SignupPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                _darkInput('Email'),
+                _darkInput('Email', controller: emailController, type: TextInputType.emailAddress),
                 const SizedBox(height: 18),
-                _darkInput('Name'),
+                _darkInput('Name', controller: nameController),
                 const SizedBox(height: 18),
-                _darkInput('Age', type: TextInputType.number),
+                _darkInput('Password', controller: passwordController, obscure: true),
                 const SizedBox(height: 18),
-                _darkInput('Password', obscure: true),
+                _darkInput('Confirm Password', controller: confirmPasswordController, obscure: true),
                 const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
@@ -66,8 +97,17 @@ class SignupPage extends StatelessWidget {
                       ),
                       textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () => _goToHome(context),
-                    child: const Text('Sign Up'),
+                    onPressed: loading ? null : _signUp,
+                    child: loading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: kDarkBlue,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Text('Sign Up'),
                   ),
                 ),
               ],
@@ -78,8 +118,13 @@ class SignupPage extends StatelessWidget {
     );
   }
 
-  Widget _darkInput(String label, {bool obscure = false, TextInputType type = TextInputType.text}) {
+  Widget _darkInput(String label, {
+    required TextEditingController controller,
+    bool obscure = false,
+    TextInputType type = TextInputType.text,
+  }) {
     return TextField(
+      controller: controller,
       obscureText: obscure,
       keyboardType: type,
       style: const TextStyle(color: kBisque),

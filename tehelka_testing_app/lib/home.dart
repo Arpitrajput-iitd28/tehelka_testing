@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'project_service.dart'; // <-- Make sure this contains your API functions
+import 'project_service.dart';
 import 'profile.dart';
 import 'testscreen.dart';
 import 'history_screen.dart';
@@ -129,6 +129,21 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+  void _onTestProject(Project project) async {
+  try {
+    await startTest(project.name); // Call the API to start the test
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TestScreen(project: project),
+      ),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to start test: $e')),
+    );
+  }
+}
+
 
   Future<void> _deleteProject(String projectName) async {
   try {
@@ -272,18 +287,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                             trailing: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                ElevatedButton(
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: kBisque,
-                                                    foregroundColor: kDarkBlue,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(8),
-                                                    ),
-                                                  ),
-                                                  child: const Text('Test'),
-                                                  onPressed: () => _navigateToTestProject(project),
-                                                ),
-                                                const SizedBox(width: 8),
+                                              ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kBisque,
+                              foregroundColor: kDarkBlue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text('Test'),
+                            onPressed: () => _onTestProject(project),
+                          ),
+
 IconButton(
   icon: const Icon(Icons.delete, color: Colors.redAccent),
   tooltip: 'Delete Project',
