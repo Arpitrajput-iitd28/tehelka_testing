@@ -1,6 +1,9 @@
 package com.load.Service;
 
+import com.load.Enums.TestRunStatus;
+import com.load.Model.RunTest;
 import com.load.Model.Test;
+import com.load.Repository.RunTestRepository;
 import com.load.Repository.TestRepository;
 
 import org.springframework.stereotype.Service;
@@ -15,17 +18,19 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class RunTestService {
 
     private final TestRepository testRepository;
+    private final RunTestRepository runTestRepository;
     private final Set<Path> downloadedCsvFiles = new HashSet<>();
 
-    public RunTestService(TestRepository testRepository) {
+    public RunTestService(TestRepository testRepository, RunTestRepository runTestRepository) {
         this.testRepository = testRepository;
+        this.runTestRepository = runTestRepository;
     }
 
     private boolean isUrl(String path) {
@@ -133,6 +138,12 @@ public class RunTestService {
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test not found with id: " + testId));
 
+        RunTest runTest = new RunTest();
+        runTest.setTest(test);
+        runTest.setStatus(TestRunStatus.RUNNING);
+        runTest.setStartedAt(LocalDateTime.now());
+        runTest = runTestRepository.save(runTest);
+
         Path tempJmxPath = Files.createTempFile("testplan-", ".jmx");
         Files.write(tempJmxPath, test.getJmxFileData());
 
@@ -164,6 +175,17 @@ public class RunTestService {
 
         // Always clean up downloaded CSVs
         cleanupDownloadedCsvFiles();
+
+        // Update runTest status and details
+        runTest.setFinishedAt(LocalDateTime.now());
+        runTest.setResultFilePath(resultPath.toAbsolutePath().toString());
+        if (exitCode == 0) {
+            runTest.setStatus(TestRunStatus.COMPLETED);
+        } else {
+            runTest.setStatus(TestRunStatus.FAILED);
+            runTest.setErrorMessage("JMeter execution failed with exit code " + exitCode);
+        }
+        runTestRepository.save(runTest);
 
         if (exitCode != 0) {
             throw new RuntimeException("JMeter execution failed with exit code " + exitCode);

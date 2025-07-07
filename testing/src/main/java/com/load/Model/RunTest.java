@@ -14,34 +14,41 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.*;
 
+
+@Getter@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
+@Entity
+@Table(name = "run_test")
 public class RunTest {
-    @Entity
-    @Table(name = "test_run")
-    public class TestRun {
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
 
-        @ManyToOne
-        @JoinColumn(name = "project_id", nullable = false)
-        private Test test;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-        @Column(name = "status")
-        @Enumerated(EnumType.STRING)
-        private TestRunStatus status; // e.g., QUEUED, RUNNING, COMPLETED, FAILED
+    @ManyToOne
+    @JoinColumn(name = "test_id", nullable = false)
+    private Test test;
 
-        @Column(name = "result_file_path")
-        private String resultFilePath;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private TestRunStatus status; // e.g., QUEUED, RUNNING, COMPLETED, FAILED
 
-        @Column(name = "started_at")
-        private LocalDateTime startedAt;
+    @Column(name = "result_file_path")
+    private String resultFilePath;
 
-        @Column(name = "finished_at")
-        private LocalDateTime finishedAt;
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
 
-        @Column(name = "error_message")
-        private String errorMessage;
-    }
+    @Column(name = "finished_at")
+    private LocalDateTime finishedAt;
+
+    @Column(name = "error_message")
+    private String errorMessage;
 
 }
+
+
