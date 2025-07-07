@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
+import 'login.dart';
 
+// Custom Colors
+const Color kBlack = Colors.black;
 const Color kNavyBlue = Color(0xFF0A183D);
 const Color kCardColor = Color(0xFF162447);
 const Color kAccentColor = Color(0xFF1F4068);
+const Color kBisque = Color(0xFFFFE4C4);
 
 void main() {
   runApp(const MyApp());
@@ -15,47 +19,53 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'JMeter Controller',
+      title: 'Veritas Load',
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: kNavyBlue,
+        scaffoldBackgroundColor: kBlack,
         appBarTheme: const AppBarTheme(
           backgroundColor: kNavyBlue,
-          iconTheme: IconThemeData(color: Colors.white),
-          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          iconTheme: IconThemeData(color: kBisque),
+          titleTextStyle: TextStyle(
+            color: kBisque,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         cardColor: kCardColor,
         colorScheme: ColorScheme.dark(
           primary: kAccentColor,
-          secondary: kCardColor,
-          background: kNavyBlue,
+          secondary: kBisque,
+          background: kBlack,
+          surface: kCardColor,
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: kAccentColor,
-          labelStyle: const TextStyle(color: Colors.white70),
+          labelStyle: const TextStyle(color: kBisque),
           enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white24),
+            borderSide: BorderSide(color: kBisque),
           ),
           focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
+            borderSide: BorderSide(color: kBisque, width: 2),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color.fromARGB(255, 8, 44, 89),
-            foregroundColor: Colors.white,
+            backgroundColor: kNavyBlue,
+            foregroundColor: kBisque,
           ),
         ),
         textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white),
-          bodyLarge: TextStyle(color: Colors.white),
-          titleMedium: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: kBisque),
+          bodyLarge: TextStyle(color: kBisque),
+          titleMedium: TextStyle(color: kBisque),
         ),
+        iconTheme: const IconThemeData(color: kBisque),
       ),
-      darkTheme: ThemeData.dark(), // Ensures system dark mode always uses dark
-      themeMode: ThemeMode.dark,   // Forces dark mode regardless of system setting
-      home: const HomeScreen(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
+      home: const LoginPage(),
     );
   }
 }

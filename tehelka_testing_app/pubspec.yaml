@@ -51,7 +51,7 @@ dev_dependencies:
 
 flutter_native_splash:
   color: "#2f0909"  
-  image: "assets/app_logo3.png"
+  image: "assets/app_logo4.png"
   android: true
   ios: true
 
@@ -59,7 +59,7 @@ flutter_native_splash:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/app_logo3.png"
+  image_path: "assets/app_logo4.png"
 
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -77,7 +77,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/app_logo.png
-    - assets/app_logo3.png
+    - assets/app_logo4.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
