@@ -6,7 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 import { LayoutComponent } from '../../../shared/layout/layout';
-import { CreateTestService, LoadTestConfigRequest } from './create-test-service';
+import { CreateTestService, TestRequest, Project } from './create-test-service';
 
 @Component({
   selector: 'app-create-test',
@@ -17,52 +17,104 @@ import { CreateTestService, LoadTestConfigRequest } from './create-test-service'
 })
 export class CreateTestComponent implements OnInit {
   createTestForm: FormGroup;
-  selectedScriptType = 'simple';
+  selectedScriptType = 'upload';
   selectedScheduleType = 'now';
   selectedFile: File | null = null;
   isCreating = false;
+  isLoadingProjects = true;
+  
+  // Project data
+  projects: Project[] = [];
+  selectedProjectId: number | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
-    private loadTestApiService: CreateTestService
+    private createTestService: CreateTestService
   ) {
     this.createTestForm = this.formBuilder.group({
       testName: ['', Validators.required],
-      projectName: ['', Validators.required],
-      description: [''],
-      testType: ['', Validators.required],
-      targetUrl: ['', [Validators.required, Validators.pattern('https?://.+')]],
+      projectId: ['', Validators.required],
+      comments: [''],
+      testType: ['load', Validators.required],
+      action: ['Load Test'],
+      thread: ['Thread Group'],
       virtualUsers: [10, [Validators.required, Validators.min(1), Validators.max(10000)]],
       duration: [5, [Validators.required, Validators.min(1), Validators.max(1440)]],
-      rampUpTime: [30],
-      thinkTime: [1],
-      githubUrl: [''],
-      scriptPath: [''],
-      httpMethod: ['GET'],
-      requestHeaders: ['{"Content-Type": "application/json"}'],
-      requestBody: [''],
+      rampUpTime: [30, [Validators.required, Validators.min(1)]],
+      loop: [1, [Validators.required, Validators.min(1)]],
+      startdelay: [0, [Validators.min(0)]],
+      startupTime: [10, [Validators.required, Validators.min(1)]],
+      holdLoadFor: [300, [Validators.required, Validators.min(1)]],
+      shutdownTime: [10, [Validators.required, Validators.min(1)]],
+      startThreadCount: [1, [Validators.required, Validators.min(1)]],
+      initialDelay: [0, [Validators.min(0)]],
       scheduleTime: ['']
     });
   }
 
   ngOnInit(): void {
     console.log('Create Test component initialized');
+    this.loadProjects();
   }
 
-  onScriptTypeChange(type: string): void {
-    this.selectedScriptType = type;
-    console.log('Script type changed to:', type);
+  // Load available projects
+  loadProjects(): void {
+    this.isLoadingProjects = true;
+    this.createTestService.getAllProjects().subscribe({
+      next: (projects) => {
+        this.projects = projects;
+        this.isLoadingProjects = false;
+        console.log('Projects loaded:', projects);
+      },
+      error: (error) => {
+        console.error('Error loading projects:', error);
+        this.isLoadingProjects = false;
+        alert('Failed to load projects. Please refresh the page.');
+      }
+    });
+  }
+
+  onProjectChange(): void {
+    this.selectedProjectId = parseInt(this.createTestForm.get('projectId')?.value);
+    console.log('Selected project ID:', this.selectedProjectId);
+  }
+
+  onTestTypeChange(): void {
+    const testType = this.createTestForm.get('testType')?.value;
+    const actionMap: { [key: string]: string } = {
+      'load': 'Load Test',
+      'stress': 'Stress Test',
+      'spike': 'Spike Test',
+      'volume': 'Volume Test'
+    };
+    
+    this.createTestForm.patchValue({
+      action: actionMap[testType] || 'Load Test'
+    });
   }
 
   onScheduleTypeChange(type: string): void {
     this.selectedScheduleType = type;
     console.log('Schedule type changed to:', type);
+    
+    if (type === 'now') {
+      this.createTestForm.patchValue({ scheduleTime: '' });
+    }
   }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
+      // Validate file type
+      const allowedExtensions = ['jmx', 'pdf'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      
+      if (!allowedExtensions.includes(fileExtension || '')) {
+        alert('Only .jmx and .pdf files are allowed');
+        return;
+      }
+      
       this.selectedFile = file;
       console.log('File selected:', file.name);
     }
@@ -76,7 +128,18 @@ export class CreateTestComponent implements OnInit {
     event.preventDefault();
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
-      this.selectedFile = files[0];
+      const file = files[0];
+      
+      // Validate file type
+      const allowedExtensions = ['jmx', 'pdf'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      
+      if (!allowedExtensions.includes(fileExtension || '')) {
+        alert('Only .jmx and .pdf files are allowed');
+        return;
+      }
+      
+      this.selectedFile = file;
       console.log('File dropped:', this.selectedFile.name);
     }
   }
@@ -87,50 +150,60 @@ export class CreateTestComponent implements OnInit {
 
   saveAsDraft(): void {
     console.log('Saving test as draft:', this.createTestForm.value);
-    // Implement save as draft logic - could be a separate API endpoint
-    alert('Test saved as draft!');
+    alert('Draft functionality will be implemented in future updates');
   }
 
   createTest(): void {
-  if (this.createTestForm.valid) {
-      this.isCreating = true;
-      
-      const apiRequest: LoadTestConfigRequest = this.loadTestApiService.convertFormToApiRequest(
-        this.createTestForm.value, 
-        this.selectedFile ?? undefined
-      );
-
-      console.log('Sending API request:', apiRequest);
-
-      this.loadTestApiService.createLoadTestConfig(apiRequest).subscribe({
-        next: (response) => {
-          console.log('Test created successfully:', response);
-          this.isCreating = false;
-          alert(`Test "${response.fileName}" created successfully!`);
-          this.router.navigate(['/tests']);
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Full error object:', error);
-          console.error('Error status:', error.status);
-          console.error('Error message:', error.message);
-          console.error('Error body:', error.error);
-          
-          this.isCreating = false;
-          
-          // Show more detailed error message
-          let errorMessage = 'Failed to create test.';
-          if (error.error && typeof error.error === 'string') {
-            errorMessage = error.error;
-          } else if (error.error && error.error.message) {
-            errorMessage = error.error.message;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-          
-          alert(`Error (${error.status}): ${errorMessage}`);
-        }
-      });
+    if (!this.createTestForm.valid) {
+      this.markFormGroupTouched();
+      alert('Please fill in all required fields');
+      return;
     }
+
+    if (!this.selectedFile) {
+      alert('Please select a JMX or PDF file');
+      return;
+    }
+
+    if (!this.selectedProjectId) {
+      alert('Please select a project');
+      return;
+    }
+
+    this.isCreating = true;
+    
+    // Convert form data to TestRequest
+    const testRequest: TestRequest = this.createTestService.convertFormToTestRequest(
+      this.createTestForm.value
+    );
+
+    console.log('Sending test request:', testRequest);
+    console.log('Selected project ID:', this.selectedProjectId);
+    console.log('Selected file:', this.selectedFile.name);
+
+    this.createTestService.createTest(this.selectedProjectId, testRequest, this.selectedFile).subscribe({
+      next: (response) => {
+        console.log('Test created successfully:', response);
+        this.isCreating = false;
+        alert(`Test "${response.testName}" created successfully!`);
+        this.router.navigate(['/tests']);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error creating test:', error);
+        this.isCreating = false;
+        
+        let errorMessage = 'Failed to create test.';
+        if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(`Error (${error.status}): ${errorMessage}`);
+      }
+    });
   }
 
   private markFormGroupTouched(): void {

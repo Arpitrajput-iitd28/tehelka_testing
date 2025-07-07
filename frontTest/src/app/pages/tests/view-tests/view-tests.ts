@@ -258,20 +258,30 @@ export class ViewTestsComponent implements OnInit {
 
   deleteTest(testId: number): void {
     console.log('Deleting test:', testId);
+    
     if (confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
-      this.viewTestsService.deleteTest(testId).subscribe({
+      // Find the test to get project ID
+      const test = this.allTests.find(t => t.id === testId);
+      if (!test) {
+        alert('Test not found');
+        return;
+      }
+
+      // Fix: Access project.id and pass both parameters
+      this.viewTestsService.deleteTest(test.project.id, testId).subscribe({
         next: () => {
           console.log('Test deleted successfully');
           this.loadTests(); // Reload the list
           alert('Test deleted successfully');
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error deleting test:', error);
           alert('Failed to delete test. Please try again.');
         }
       });
     }
   }
+
 
   exportTests(): void {
     console.log('Exporting tests');
@@ -337,7 +347,7 @@ export class ViewTestsComponent implements OnInit {
   }
 
   getProjectOptions(): string[] {
-    const projects = [...new Set(this.allTests.map(test => test.project))];
+    const projects = [...new Set(this.allTests.map(test => test.project.name))];
     return projects.sort();
   }
 

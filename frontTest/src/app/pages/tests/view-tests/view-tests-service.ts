@@ -1,95 +1,161 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment.development';
+import { AuthService } from '../../../services/auth';
 
-// Interface for the backend response
-export interface LoadTestResponse {
-  id: number;
+// Interface for test summary (what we get from the list endpoint)
+export interface TestSummary {
   testName: string;
-  targetUrl: string;
-  numUsers: number;
-  rampUpPeriod: number;
-  testDuration: number;
-  crudType: string;
-  fileName: string;
-  scheduled: boolean;
-  scheduledExecutionTime: string | null;
   createdAt: string;
 }
 
-// Extended interface for display purposes
-export interface LoadTestDisplay extends LoadTestResponse {
+// Interface for full test details
+export interface TestDetails {
+  id: number;
+  testName: string;
+  comments?: string;
+  action: string;
+  thread: string;
+  numUsers: number;
+  rampUpPeriod: number;
+  testDuration: number;
+  loop: number;
+  startdelay: number;
+  startupTime: number;
+  holdLoadFor: number;
+  shutdownTime: number;
+  startThreadCount: number;
+  initialDelay: number;
+  scheduledExecutionTime?: string;
+  scheduled: boolean;
+  fileName: string;
+  createdAt: string;
+  project: {
+    id: number;
+    name: string;
+  };
+}
+
+// Extended interface for display purposes (this was missing)
+export interface LoadTestDisplay extends TestDetails {
   status: string;
-  project: string;
   type: string;
   successRate: number;
   duration: string;
+  projectName: string;
+}
+
+export interface Project {
+  id: number;
+  name: string;
+  createdAt: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ViewTestsService {
-  private baseUrl = `${environment.apiUrl}/load-tests`;
+  private baseUrl = `${environment.apiUrl}/projects`;
   
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json'
-    })
-  };
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
-  constructor(private http: HttpClient) {}
-
-  // Get all scheduled tests
-  getAllScheduledTests(): Observable<LoadTestResponse[]> {
-    return this.http.get<LoadTestResponse[]>(`${this.baseUrl}/scheduled-tests`);
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
   }
 
-  // Get all tests (when you add this endpoint to backend)
-  getAllTests(): Observable<LoadTestResponse[]> {
-    return this.http.get<LoadTestResponse[]>(`${this.baseUrl}/all-tests`);
+  // Get all projects
+  getAllProjects(): Observable<Project[]> {
+    return this.http.get<Project[]>(`${environment.apiUrl}/projects`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  // Get test by ID
-  getTestById(id: number): Observable<LoadTestResponse> {
-    return this.http.get<LoadTestResponse>(`${this.baseUrl}/${id}`);
+  // Get tests for a specific project
+  getTestsForProject(projectId: number): Observable<TestSummary[]> {
+    return this.http.get<TestSummary[]>(`${this.baseUrl}/${projectId}/tests`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  // Delete a test
-  deleteTest(id: number): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${id}`, this.httpOptions);
+  // Get all scheduled tests (for backward compatibility)
+  getAllScheduledTests(): Observable<any[]> {
+    // For now, use a hardcoded project ID or get from first available project
+    const projectId = 1; // You may want to make this configurable
+    return this.getTestsForProject(projectId);
   }
 
-  // Stop a running test (when you add this endpoint)
-  stopTest(id: number): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/${id}/stop`, {}, this.httpOptions);
+  // Get all tests across all projects
+  getAllTests(): Observable<LoadTestDisplay[]> {
+    return this.getAllProjects().pipe(
+      switchMap(projects => {
+        if (projects.length === 0) {
+          return of([]);
+        }
+        
+        const testRequests = projects.map(project =>
+          this.getTestsForProject(project.id).pipe(
+            map(tests => tests.map(test => ({ 
+              ...test, 
+              projectId: project.id, 
+              projectName: project.name,
+              project: { id: project.id, name: project.name }
+            })))
+          )
+        );
+        
+        return forkJoin(testRequests).pipe(
+          map(projectTests => {
+            const allTests = projectTests.flat();
+            return this.transformTestsForDisplay(allTests);
+          })
+        );
+      })
+    );
   }
 
-  // Cancel a scheduled test (when you add this endpoint)
-  cancelTest(id: number): Observable<any> {
-    return this.http.patch(`${this.baseUrl}/${id}/cancel`, {}, this.httpOptions);
-  }
-
-  // Retry a failed test (when you add this endpoint)
-  retryTest(id: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/${id}/retry`, {}, this.httpOptions);
-  }
-
-  // Helper methods to transform data for display
-  transformTestsForDisplay(tests: LoadTestResponse[]): LoadTestDisplay[] {
+  // Transform tests for display
+  transformTestsForDisplay(tests: any[]): LoadTestDisplay[] {
     return tests.map(test => ({
       ...test,
+      id: test.id || Math.random(), // Ensure ID exists
+      testName: test.testName || 'Unknown Test',
+      comments: test.comments || '',
+      action: test.action || 'Load Test',
+      thread: test.thread || 'Thread Group',
+      numUsers: test.numUsers || 10,
+      rampUpPeriod: test.rampUpPeriod || 30,
+      testDuration: test.testDuration || 300,
+      loop: test.loop || 1,
+      startdelay: test.startdelay || 0,
+      startupTime: test.startupTime || 10,
+      holdLoadFor: test.holdLoadFor || 300,
+      shutdownTime: test.shutdownTime || 10,
+      startThreadCount: test.startThreadCount || 1,
+      initialDelay: test.initialDelay || 0,
+      scheduledExecutionTime: test.scheduledExecutionTime,
+      scheduled: test.scheduled || false,
+      fileName: test.fileName || 'test.jmx',
+      createdAt: test.createdAt || new Date().toISOString(),
+      project: test.project || { id: 1, name: 'Default Project' },
       status: this.getTestStatus(test),
-      project: this.getProjectFromUrl(test.targetUrl),
-      type: this.mapCrudTypeToTestType(test.crudType),
-      successRate: this.getRandomSuccessRate(), // Mock data - replace with real data when available
-      duration: this.formatDuration(test.testDuration)
+      type: this.mapActionToTestType(test.action || 'Load Test'),
+      successRate: this.getRandomSuccessRate(),
+      duration: this.formatDuration(test.testDuration || 300),
+      projectName: test.projectName || test.project?.name || 'Unknown Project'
     }));
   }
 
-  // Get test status based on scheduling and execution time
-  private getTestStatus(test: LoadTestResponse): string {
+  // Get test status based on scheduling
+  private getTestStatus(test: any): string {
     if (test.scheduled && test.scheduledExecutionTime) {
       const scheduledTime = new Date(test.scheduledExecutionTime);
       const now = new Date();
@@ -97,9 +163,8 @@ export class ViewTestsService {
       if (scheduledTime > now) {
         return 'SCHEDULED';
       } else {
-        // Check if it's currently running (you might need to add this field to backend)
         const timeSinceScheduled = now.getTime() - scheduledTime.getTime();
-        const testDurationMs = test.testDuration * 1000;
+        const testDurationMs = (test.testDuration || 300) * 1000;
         
         if (timeSinceScheduled < testDurationMs) {
           return 'RUNNING';
@@ -109,58 +174,26 @@ export class ViewTestsService {
       }
     }
     
-    // For non-scheduled tests, assume completed
     return 'COMPLETED';
   }
 
-  // Extract project name from target URL
-  private getProjectFromUrl(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      const hostname = urlObj.hostname.toLowerCase();
-      
-      // Map based on hostname or path
-      if (hostname.includes('upload') || url.includes('upload')) {
-        return 'File Upload Service';
-      } else if (hostname.includes('api') || url.includes('api')) {
-        return 'API Service';
-      } else if (hostname.includes('auth') || url.includes('auth')) {
-        return 'Authentication Service';
-      } else if (hostname.includes('payment') || url.includes('payment')) {
-        return 'Payment System';
-      } else if (hostname.includes('ecommerce') || url.includes('ecommerce')) {
-        return 'E-commerce API';
-      } else if (hostname.includes('dashboard') || url.includes('dashboard')) {
-        return 'Dashboard UI';
-      } else if (hostname.includes('localhost')) {
-        return 'Development Environment';
-      } else {
-        return 'External Service';
-      }
-    } catch (error) {
-      return 'Unknown Project';
-    }
-  }
-
-  // Map CRUD type to test type
-  private mapCrudTypeToTestType(crudType: string): string {
-    switch (crudType?.toUpperCase()) {
-      case 'CREATE':
+  // Map action back to test type
+  private mapActionToTestType(action: string): string {
+    switch (action?.toLowerCase()) {
+      case 'stress test':
         return 'stress';
-      case 'READ':
-        return 'load';
-      case 'UPDATE':
+      case 'spike test':
         return 'spike';
-      case 'DELETE':
+      case 'volume test':
         return 'volume';
+      case 'load test':
       default:
         return 'load';
     }
   }
 
-  // Generate mock success rate (replace with real data when available)
+  // Generate mock success rate
   private getRandomSuccessRate(): number {
-    // Generate a realistic success rate between 75-100%
     return Math.floor(Math.random() * 25) + 75;
   }
 
@@ -180,30 +213,7 @@ export class ViewTestsService {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     
-    if (remainingMinutes > 0) {
-      return `${hours}h ${remainingMinutes}m`;
-    } else {
-      return `${hours}h`;
-    }
-  }
-
-  // Get test counts by status for stats cards
-  getTestCountsByStatus(tests: LoadTestDisplay[]): { [key: string]: number } {
-    const counts = {
-      RUNNING: 0,
-      COMPLETED: 0,
-      FAILED: 0,
-      SCHEDULED: 0,
-      DRAFT: 0
-    };
-
-    tests.forEach(test => {
-      if (counts.hasOwnProperty(test.status)) {
-        counts[test.status as keyof typeof counts]++;
-      }
-    });
-
-    return counts;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   }
 
   // Filter tests based on search and filter criteria
@@ -216,28 +226,24 @@ export class ViewTestsService {
   ): LoadTestDisplay[] {
     let filtered = [...tests];
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(test => 
         test.testName.toLowerCase().includes(query) ||
         test.fileName.toLowerCase().includes(query) ||
-        test.targetUrl.toLowerCase().includes(query) ||
-        test.project.toLowerCase().includes(query)
+        test.projectName.toLowerCase().includes(query) ||
+        test.comments?.toLowerCase().includes(query)
       );
     }
 
-    // Status filter
     if (statusFilter) {
       filtered = filtered.filter(test => test.status === statusFilter);
     }
 
-    // Project filter
     if (projectFilter) {
-      filtered = filtered.filter(test => test.project === projectFilter);
+      filtered = filtered.filter(test => test.projectName === projectFilter);
     }
 
-    // Type filter
     if (typeFilter) {
       filtered = filtered.filter(test => test.type === typeFilter);
     }
@@ -251,13 +257,11 @@ export class ViewTestsService {
       let aValue: any = a[sortField as keyof LoadTestDisplay];
       let bValue: any = b[sortField as keyof LoadTestDisplay];
 
-      // Handle date sorting
       if (sortField === 'createdAt') {
         aValue = new Date(aValue).getTime();
         bValue = new Date(bValue).getTime();
       }
 
-      // Handle string sorting
       if (typeof aValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
@@ -280,6 +284,38 @@ export class ViewTestsService {
     return tests.slice(startIndex, endIndex);
   }
 
+  // Get test counts by status
+  getTestCountsByStatus(tests: LoadTestDisplay[]): { [status: string]: number } {
+    const counts: { [status: string]: number } = {};
+    tests.forEach(test => {
+      counts[test.status] = (counts[test.status] || 0) + 1;
+    });
+    return counts;
+  }
+
+  // Delete a test (fixed to match backend API)
+  deleteTest(projectId: number, testId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${projectId}/tests/${testId}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Test control methods (placeholders for future implementation)
+  stopTest(testId: number): Observable<any> {
+    // Placeholder - implement when backend supports it
+    return of({ message: 'Stop test functionality not yet implemented' });
+  }
+
+  cancelTest(testId: number): Observable<any> {
+    // Placeholder - implement when backend supports it
+    return of({ message: 'Cancel test functionality not yet implemented' });
+  }
+
+  retryTest(testId: number): Observable<any> {
+    // Placeholder - implement when backend supports it
+    return of({ message: 'Retry test functionality not yet implemented' });
+  }
+
   // Export tests to JSON
   exportTestsToJson(tests: LoadTestDisplay[]): void {
     const dataStr = JSON.stringify(tests, null, 2);
@@ -295,7 +331,7 @@ export class ViewTestsService {
   // Export tests to CSV
   exportTestsToCsv(tests: LoadTestDisplay[]): void {
     const headers = [
-      'ID', 'Test Name', 'File Name', 'Project', 'Target URL', 
+      'ID', 'Test Name', 'File Name', 'Project', 'Action', 
       'Type', 'Status', 'Virtual Users', 'Duration', 'Success Rate', 
       'Created At'
     ];
@@ -306,8 +342,8 @@ export class ViewTestsService {
         test.id,
         `"${test.testName}"`,
         `"${test.fileName}"`,
-        `"${test.project}"`,
-        `"${test.targetUrl}"`,
+        `"${test.project.name}"`,
+        `"${test.action}"`,
         test.type,
         test.status,
         test.numUsers,

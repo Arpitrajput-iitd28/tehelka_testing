@@ -1,79 +1,124 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaderResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
-export interface LoadTestConfigRequest{
-  fileName: string;
-  targetUrl: string;
+
+// Updated interfaces to match backend DTOs
+export interface TestRequest {
+  testName: string;
+  comments?: string;
+  action: string;
+  thread: string;
   numUsers: number;
-  rampUpPeriod: number; //in seconds
-  testDuration: number; //in seconds
-  scheduledExecutionTime?: string;
-  crudType: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
+  rampUpPeriod: number;
+  testDuration: number;
+  loop: number;
+  startdelay: number;
+  startupTime: number;
+  holdLoadFor: number;
+  shutdownTime: number;
+  startThreadCount: number;
+  initialDelay: number;
+  scheduledExecutionTime?: string; // ISO string format
 }
 
-export interface LoadTestConfig{
-  id? : string;
-  fileName: string;
-  targetURL: string;
+export interface TestResponse {
+  id: number;
+  testName: string;
+  comments?: string;
+  action: string;
+  thread: string;
   numUsers: number;
-  rampupperiod: number; //in seconds
-  testDuration: number; //in seconds
+  rampUpPeriod: number;
+  testDuration: number;
+  loop: number;
+  startdelay: number;
+  startupTime: number;
+  holdLoadFor: number;
+  shutdownTime: number;
+  startThreadCount: number;
+  initialDelay: number;
   scheduledExecutionTime?: string;
-  crudType: string;
-  createdAt?: string;
-  status?: string;
+  scheduled: boolean;
+  fileName: string;
+  createdAt: string;
+  project: {
+    id: number;
+    name: string;
+  };
 }
 
+export interface Project {
+  id: number;
+  name: string;
+  createdAt: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class CreateTestService {
-  private baseURL= `${environment.apiUrl}/load-tests`;
+  private baseUrl = `${environment.apiUrl}`;
 
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json'
-    })
-  };
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
-
-  // Create a new load test configuration
-
-  createLoadTestConfig(request: LoadTestConfigRequest): Observable<LoadTestConfig> {
-    return this.http.post<LoadTestConfig>(`${this.baseURL}/config`, request, this.httpOptions);
+  // Get all projects for dropdown selection
+  getAllProjects(): Observable<Project[]> {
+    return this.http.get<Project[]>(`${this.baseUrl}/projects`);
   }
 
-  getAllScheduledTests(): Observable<LoadTestConfig[]> {
-    return this.http.get<LoadTestConfig[]>(`${this.baseURL}/scheduled-tests`);
+  // Create a new test under a specific project
+  createTest(projectId: number, testRequest: TestRequest, file: File): Observable<TestResponse> {
+    const formData = new FormData();
+    
+    // Add test data as JSON string
+    formData.append('test', new Blob([JSON.stringify(testRequest)], {
+      type: 'application/json'
+    }));
+    
+    // Add file
+    formData.append('file', file);
+
+    return this.http.post<TestResponse>(
+      `${this.baseUrl}/projects/${projectId}/tests/create`,
+      formData
+    );
   }
-  
-  convertFormToApiRequest(formData: any, selectedFile?: File): LoadTestConfigRequest {
+
+  // Helper method to convert form data to TestRequest format
+  convertFormToTestRequest(formData: any): TestRequest {
     return {
-      fileName: selectedFile ? selectedFile.name : formData.testName || 'default-test',
-      targetUrl: formData.targetUrl,           // Fixed field name
+      testName: formData.testName || '',
+      comments: formData.description || '',
+      action: this.mapTestTypeToAction(formData.testType),
+      thread: formData.thread || 'Thread Group',
       numUsers: parseInt(formData.virtualUsers) || 10,
-      rampUpPeriod: parseInt(formData.rampUpTime) || 30,  // Fixed field name
-      testDuration: (parseInt(formData.duration) || 5) * 60,
-      scheduledExecutionTime: formData.scheduleTime ? new Date(formData.scheduleTime).toISOString() : undefined,
-      crudType: this.mapTestTypeToCrudType(formData.testType)
+      rampUpPeriod: parseInt(formData.rampUpTime) || 30,
+      testDuration: (parseInt(formData.duration) || 5) * 60, // Convert minutes to seconds
+      loop: parseInt(formData.loop) || 1,
+      startdelay: parseInt(formData.startdelay) || 0,
+      startupTime: parseInt(formData.startupTime) || 10,
+      holdLoadFor: parseInt(formData.holdLoadFor) || 300,
+      shutdownTime: parseInt(formData.shutdownTime) || 10,
+      startThreadCount: parseInt(formData.startThreadCount) || 1,
+      initialDelay: parseInt(formData.initialDelay) || 0,
+      scheduledExecutionTime: formData.scheduleTime ? 
+        new Date(formData.scheduleTime).toISOString() : undefined
     };
   }
 
-  private mapTestTypeToCrudType(testType: string): 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' {
-    switch (testType) {
+  private mapTestTypeToAction(testType: string): string {
+    switch (testType?.toLowerCase()) {
       case 'load':
-        return 'READ';
+        return 'Load Test';
       case 'stress':
-        return 'CREATE';
+        return 'Stress Test';
       case 'spike':
-        return 'UPDATE';
+        return 'Spike Test';
       case 'volume':
-        return 'DELETE';
+        return 'Volume Test';
       default:
-        return 'READ';
+        return 'Load Test';
     }
   }
 }

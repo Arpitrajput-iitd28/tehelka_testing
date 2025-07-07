@@ -14,8 +14,16 @@
       </div>
     </div>
 
+    <!-- Loading Projects State -->
+    <div *ngIf="isLoadingProjects" class="loading-state">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading projects...</p>
+      </div>
+    </div>
+
     <!-- Test Configuration Form -->
-    <div class="form-container">
+    <div *ngIf="!isLoadingProjects" class="form-container">
       <form [formGroup]="createTestForm" (ngSubmit)="createTest()" class="test-form">
         
         <!-- Basic Information -->
@@ -33,20 +41,21 @@
             </div>
             
             <div class="form-group">
-              <label for="projectName">Project Name *</label>
-              <select id="projectName" formControlName="projectName" class="form-select">
+              <label for="projectId">Project *</label>
+              <select id="projectId" formControlName="projectId" (change)="onProjectChange()" class="form-select">
                 <option value="">Select a project</option>
-                <option value="ecommerce">E-commerce API</option>
-                <option value="dashboard">Dashboard UI</option>
-                <option value="auth">Authentication Service</option>
-                <option value="payment">Payment System</option>
+                <option *ngFor="let project of projects" [value]="project.id">{{project.name}}</option>
               </select>
+              <div *ngIf="createTestForm.get('projectId')?.invalid && createTestForm.get('projectId')?.touched" 
+                   class="error-message">
+                Please select a project
+              </div>
             </div>
           </div>
           
           <div class="form-group">
-            <label for="description">Description</label>
-            <textarea id="description" formControlName="description" 
+            <label for="comments">Comments</label>
+            <textarea id="comments" formControlName="comments" 
                       placeholder="Describe what this test will validate" 
                       class="form-textarea" rows="3"></textarea>
           </div>
@@ -58,8 +67,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="testType">Test Type *</label>
-              <select id="testType" formControlName="testType" class="form-select">
-                <option value="">Select test type</option>
+              <select id="testType" formControlName="testType" (change)="onTestTypeChange()" class="form-select">
                 <option value="load">Load Test</option>
                 <option value="stress">Stress Test</option>
                 <option value="spike">Spike Test</option>
@@ -68,116 +76,115 @@
             </div>
             
             <div class="form-group">
-              <label for="targetUrl">Target URL *</label>
-              <input type="url" id="targetUrl" formControlName="targetUrl" 
-                     placeholder="https://api.example.com" class="form-input">
+              <label for="action">Action</label>
+              <input type="text" id="action" formControlName="action" 
+                     placeholder="Test action description" class="form-input" readonly>
             </div>
           </div>
-          
+
           <div class="form-row">
+            <div class="form-group">
+              <label for="thread">Thread Group</label>
+              <input type="text" id="thread" formControlName="thread" 
+                     placeholder="Thread Group" class="form-input">
+            </div>
+            
             <div class="form-group">
               <label for="virtualUsers">Virtual Users *</label>
               <input type="number" id="virtualUsers" formControlName="virtualUsers" 
                      placeholder="Number of concurrent users" class="form-input" min="1" max="10000">
             </div>
-            
+          </div>
+          
+          <div class="form-row">
             <div class="form-group">
               <label for="duration">Duration (minutes) *</label>
               <input type="number" id="duration" formControlName="duration" 
                      placeholder="Test duration" class="form-input" min="1" max="1440">
             </div>
+            
+            <div class="form-group">
+              <label for="rampUpTime">Ramp-up Time (seconds) *</label>
+              <input type="number" id="rampUpTime" formControlName="rampUpTime" 
+                     placeholder="Time to reach full load" class="form-input" min="1">
+            </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
-              <label for="rampUpTime">Ramp-up Time (seconds)</label>
-              <input type="number" id="rampUpTime" formControlName="rampUpTime" 
-                     placeholder="Time to reach full load" class="form-input" min="0">
+              <label for="loop">Loop Count *</label>
+              <input type="number" id="loop" formControlName="loop" 
+                     placeholder="Number of iterations" class="form-input" min="1">
             </div>
             
             <div class="form-group">
-              <label for="thinkTime">Think Time (seconds)</label>
-              <input type="number" id="thinkTime" formControlName="thinkTime" 
-                     placeholder="Delay between requests" class="form-input" min="0">
+              <label for="startdelay">Start Delay (seconds)</label>
+              <input type="number" id="startdelay" formControlName="startdelay" 
+                     placeholder="Delay before starting" class="form-input" min="0">
             </div>
           </div>
         </div>
 
-        <!-- Test Script -->
+        <!-- Advanced Configuration -->
         <div class="form-section">
-          <h2>Test Script</h2>
-          <div class="script-options">
-            <div class="script-option">
-              <input type="radio" id="uploadScript" name="scriptType" value="upload" 
-                     (change)="onScriptTypeChange('upload')">
-              <label for="uploadScript">Upload Test Script</label>
+          <h2>Advanced Configuration</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="startupTime">Startup Time (seconds) *</label>
+              <input type="number" id="startupTime" formControlName="startupTime" 
+                     placeholder="Thread startup time" class="form-input" min="1">
             </div>
-            <div class="script-option">
-              <input type="radio" id="githubScript" name="scriptType" value="github" 
-                     (change)="onScriptTypeChange('github')">
-              <label for="githubScript">Load from GitHub</label>
-            </div>
-            <div class="script-option">
-              <input type="radio" id="simpleScript" name="scriptType" value="simple" 
-                     (change)="onScriptTypeChange('simple')" checked>
-              <label for="simpleScript">Simple HTTP Test</label>
+            
+            <div class="form-group">
+              <label for="holdLoadFor">Hold Load For (seconds) *</label>
+              <input type="number" id="holdLoadFor" formControlName="holdLoadFor" 
+                     placeholder="Duration to maintain load" class="form-input" min="1">
             </div>
           </div>
-          
-          <div class="script-content" [ngSwitch]="selectedScriptType">
-            <div *ngSwitchCase="'upload'" class="file-upload-section">
-              <div class="file-upload-area" (click)="fileInput.click()" 
-                   (dragover)="onDragOver($event)" (drop)="onDrop($event)">
-                <input #fileInput type="file" (change)="onFileSelected($event)" 
-                       accept=".jmx,.js,.yaml,.yml" style="display: none;">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>Click to upload or drag and drop</p>
-                <small>Supported formats: JMX, JS, YAML</small>
-              </div>
-              <div *ngIf="selectedFile" class="selected-file">
-                <i class="fas fa-file"></i>
-                <span>{{selectedFile.name}}</span>
-                <button type="button" (click)="removeFile()" class="remove-file-btn">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="shutdownTime">Shutdown Time (seconds) *</label>
+              <input type="number" id="shutdownTime" formControlName="shutdownTime" 
+                     placeholder="Thread shutdown time" class="form-input" min="1">
             </div>
             
-            <div *ngSwitchCase="'github'" class="github-section">
-              <div class="form-group">
-                <label for="githubUrl">GitHub Repository URL</label>
-                <input type="url" id="githubUrl" formControlName="githubUrl" 
-                       placeholder="https://github.com/username/repo" class="form-input">
-              </div>
-              <div class="form-group">
-                <label for="scriptPath">Script Path</label>
-                <input type="text" id="scriptPath" formControlName="scriptPath" 
-                       placeholder="path/to/test-script.jmx" class="form-input">
-              </div>
+            <div class="form-group">
+              <label for="startThreadCount">Start Thread Count *</label>
+              <input type="number" id="startThreadCount" formControlName="startThreadCount" 
+                     placeholder="Initial thread count" class="form-input" min="1">
             </div>
-            
-            <div *ngSwitchDefault class="simple-test-section">
-              <div class="form-group">
-                <label for="httpMethod">HTTP Method</label>
-                <select id="httpMethod" formControlName="httpMethod" class="form-select">
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="requestHeaders">Request Headers (JSON)</label>
-                <textarea id="requestHeaders" formControlName="requestHeaders" 
-                          placeholder='{"Content-Type": "application/json"}' 
-                          class="form-textarea" rows="3"></textarea>
-              </div>
-              <div class="form-group">
-                <label for="requestBody">Request Body</label>
-                <textarea id="requestBody" formControlName="requestBody" 
-                          placeholder="Request payload (for POST/PUT requests)" 
-                          class="form-textarea" rows="4"></textarea>
-              </div>
+          </div>
+
+          <div class="form-group">
+            <label for="initialDelay">Initial Delay (seconds)</label>
+            <input type="number" id="initialDelay" formControlName="initialDelay" 
+                   placeholder="Initial delay before test starts" class="form-input" min="0">
+          </div>
+        </div>
+
+        <!-- Test Script Upload -->
+        <div class="form-section">
+          <h2>Test Script *</h2>
+          <div class="file-upload-section">
+            <div class="file-upload-area" (click)="fileInput.click()" 
+                 (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+              <input #fileInput type="file" (change)="onFileSelected($event)" 
+                     accept=".jmx,.pdf" style="display: none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>Click to upload or drag and drop</p>
+              <small>Supported formats: JMX, PDF</small>
+            </div>
+            <div *ngIf="selectedFile" class="selected-file">
+              <i class="fas fa-file"></i>
+              <span>{{selectedFile.name}}</span>
+              <button type="button" (click)="removeFile()" class="remove-file-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div *ngIf="!selectedFile" class="file-requirement">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>A JMX or PDF file is required to create the test</span>
             </div>
           </div>
         </div>
@@ -215,7 +222,7 @@
           <button type="button" class="btn-outline" (click)="saveAsDraft()">
             Save as Draft
           </button>
-          <button type="submit" class="btn-primary" [disabled]="createTestForm.invalid || isCreating">
+          <button type="submit" class="btn-primary" [disabled]="createTestForm.invalid || isCreating || !selectedFile">
             <span *ngIf="!isCreating">Create & Run Test</span>
             <span *ngIf="isCreating">
               <i class="fas fa-spinner fa-spin"></i>

@@ -8,21 +8,23 @@ import { ViewProjectsComponent } from './pages/projects/view-projects/view-proje
 import { CreateProjectComponent } from './pages/projects/create-project/create-project';
 import { ManageProjectsComponent } from './pages/projects/manage-projects/manage-projects';
 import { SchedulesComponent } from './pages/schedules/schedules';
+import { SignupComponent } from './pages/signup/signup';
 
 export const routes: Routes = [
-    {path: "login", component: LoginComponent},
+    { path: 'login', component: LoginComponent },
+    { path: 'signup', component: SignupComponent },
+    { path: 'dashboard', component: DashboardComponent },
     
-    {path: 'dashboard', component: DashboardComponent},
+    { path: 'tests', component: ViewTestsComponent },
+    { path: 'tests/create', component: CreateTestComponent },
+    { path: 'tests/manage', component: ManageTestsComponent },
+
+    { path: 'projects', component: ViewProjectsComponent },
+    { path: 'projects/create', component: CreateProjectComponent },
+    { path: 'projects/manage', component: ManageProjectsComponent },
+
+    { path: 'schedules', component: SchedulesComponent },
     
-    {path: "tests", component: ViewTestsComponent},
-    {path: "tests/create", component: CreateTestComponent},
-    {path: "tests/manage", component: ManageTestsComponent},
-
-    {path: "projects", component: ViewProjectsComponent},
-    {path: "projects/create", component: CreateProjectComponent},
-    {path: "projects/manage", component: ManageProjectsComponent},
-
-    {path: "schedules", component: SchedulesComponent},
-    {path: "", redirectTo:'/login',pathMatch:'full'},
-    {path: "**", redirectTo:'/login'},
-]
+    { path: '', redirectTo: '/login', pathMatch: 'full' },
+    { path: '**', redirectTo: '/login' }
+];
