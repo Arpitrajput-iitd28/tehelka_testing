@@ -9,42 +9,46 @@ import "home.dart" as home;
 import "load_test_config_request.dart";
 import "history_screen.dart";
 
-const String baseUrl = 'http://192.168.1.17:8080'; // Replace with your API base URL
-
+const String baseUrl = 'http://192.168.1.17:8080'; 
+//
+//
+//API'S FOR HOME.DART
+//
+//
 Future<List<Project>> fetchProjects() async {
-  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/uploads'));
+  final response = await http.get(Uri.parse('$baseUrl/api/projects'));
   if (response.statusCode == 200 || response.statusCode == 201) {
-    final List<dynamic> data = jsonDecode(response.body);
+    final List data = jsonDecode(response.body);
     return data.map((json) => Project.fromJson(json)).toList();
   } else {
     throw Exception('Failed to load projects');
   }
 }
-
-
-Future<Project> createProject(String title, String filePath) async {
-  var uri = Uri.parse('$baseUrl/api/load-tests/upload');
-  var request = http.MultipartRequest('POST', uri);
-
-  // Add the file
-  request.files.add(await http.MultipartFile.fromPath('file', filePath));
-
-  // Add the custom name
-  request.fields['customName'] = title;
-
-  // Send the request
-  var streamedResponse = await request.send();
-  var response = await http.Response.fromStream(streamedResponse);
-
+Future<Project> createProject(String title) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/projects/create'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'customName': title}),
+  );
   if (response.statusCode == 200 || response.statusCode == 201) {
-    fetchProjects(); 
-    // Adjust according to your backend's response
     return Project.fromJson(jsonDecode(response.body));
   } else {
     throw Exception('Failed to create project: ${response.body}');
-}
+  }
 }
 
+Future<void> deleteProject(String projectName) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/api/load-tests/delete/$projectName'),
+    headers: {'Content-Type': 'application/json'},
+  );
+  if (response.statusCode != 200 && response.statusCode != 204) {
+    throw Exception('Failed to delete project: ${response.body}');
+  }
+}
+//
+//
+//
 Future<bool> scheduleLoadTest(LoadTestConfigRequest request) async {
   final url = Uri.parse('$baseUrl/api/load-tests/config');
   final response = await http.post(
@@ -77,17 +81,6 @@ Future<void> downloadReport(String url, String fileName) async {
   await Dio().download(url, filePath);
   await OpenFile.open(filePath); 
 }
-
-Future<void> deleteProject(String projectName) async {
-  final response = await http.delete(Uri.parse('$baseUrl/api/load-tests/delete/$projectName'));
-  if (response.statusCode == 200 || response.statusCode == 204) {
-    // Successfully deleted
-    fetchProjects(); // Refresh the project list
-  } else {
-    throw Exception('Failed to delete project: ${response.body}');
-  }
-}
-
 
 
 // Fetch scheduled tests

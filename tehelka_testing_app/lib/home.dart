@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
-import 'project_service.dart';
-import 'project.dart';
+import 'project_service.dart'; // <-- Make sure this contains your API functions
+import 'profile.dart';
+import 'testscreen.dart';
 import 'history_screen.dart';
 import 'schedule.dart';
-import 'create.dart';
-import "profile.dart";
 
 const Color kBlack = Colors.black;
 const Color kDarkBlue = Color(0xFF0A1A2F);
 const Color kBisque = Color(0xFFFFE4C4);
 
-class ScheduledTest {
-  final String testName;
-  final DateTime scheduledDateTime;
-  final Map parameters;
+class Project {
+  final String name;
+  Project(this.name);
 
-  ScheduledTest({
-    required this.testName,
-    required this.scheduledDateTime,
-    required this.parameters,
-  });
+  factory Project.fromJson(Map<String, dynamic> json) {
+    return Project(
+      json['customName'] ?? json['name'] ?? '',
+    );
+  }
 }
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,63 +27,29 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
   List<Project> projects = [];
-  bool isLoading = true;
-  String? error;
   int _selectedIndex = 0;
-  late final AnimationController _redoController;
+  bool _loadingProjects = false;
 
   @override
   void initState() {
     super.initState();
     _loadProjects();
-    _redoController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-      lowerBound: 0,
-      upperBound: 1,
-    );
   }
-
-  @override
-  void dispose() {
-    _redoController.dispose();
-    super.dispose();
-  }
-
-// Removed duplicate _onNavBarTap method (handled below)
 
   Future<void> _loadProjects() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
+    setState(() => _loadingProjects = true);
     try {
-      projects = await fetchProjects();
+      final fetchedProjects = await fetchProjects();
       setState(() {
-        isLoading = false;
+        projects = fetchedProjects.cast<Project>();
+        _loadingProjects = false;
       });
     } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _deleteProject(String projectName) async {
-    try {
-      await deleteProject(projectName);
-      setState(() {
-        projects.removeWhere((p) => p.name == projectName);
-      });
+      setState(() => _loadingProjects = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Project "$projectName" deleted!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete project: $e')),
+        SnackBar(content: Text('Failed to load projects: $e')),
       );
     }
   }
@@ -93,11 +58,94 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 0) {
-      // Already on home, do nothing or scroll to top if needed
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const ProfilePage(),
+        ),
+      );
     }
-    // For chat/profile, add navigation when implemented
+    // Add navigation for chat if needed
   }
+
+  void _navigateToTestProject(Project project) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TestScreen(project: project),
+      ),
+    );
+  }
+
+  void _showCreateProjectDialog() {
+    String? projectName;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: kDarkBlue,
+          title: const Text('Create Project', style: TextStyle(color: kBisque)),
+          content: TextField(
+            style: const TextStyle(color: kBisque),
+            decoration: InputDecoration(
+              labelText: 'Project Name',
+              labelStyle: const TextStyle(color: kBisque),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: kBisque),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: kBisque, width: 2),
+              ),
+            ),
+            onChanged: (val) => projectName = val,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel', style: TextStyle(color: kBisque)),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (projectName != null && projectName!.trim().isNotEmpty) {
+                  try {
+                    final newProject = await createProject(projectName!.trim());
+                    setState(() {
+                      projects.add(newProject as Project);
+                    });
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Project "$projectName" created!')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to create project: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Create', style: TextStyle(color: kBisque)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteProject(String projectName) async {
+  try {
+    await deleteProject(projectName);
+    setState(() {
+      projects.removeWhere((p) => p.name == projectName);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Project "$projectName" deleted!')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to delete project: $e')),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -107,9 +155,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         backgroundColor: kBlack,
         elevation: 0,
         title: const Text(
-          'VERITAS LOAD',
-          style: TextStyle(color: kBisque,
-          fontWeight: FontWeight.bold),
+          'Veritas Load',
+          style: TextStyle(color: kBisque),
         ),
         iconTheme: const IconThemeData(color: kBisque),
       ),
@@ -122,9 +169,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _navButton(Icons.history, 'History', _openHistory , border: BorderSide(color: kBisque, width: 0.75)),
-                  _navButton(Icons.add_circle, 'Create', _openCreatePage, border: BorderSide(color: kBisque, width: 0.75)),
-                  _navButton(Icons.schedule, 'Schedule', _openSchedule, border: BorderSide(color: kBisque, width: 0.75)),
+                  _navButton(Icons.history, 'History', () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => HistoryScreen(),
+                      ),
+                    );
+                  }),
+                  _navButton(Icons.add_circle, 'Create', _showCreateProjectDialog),
+                  _navButton(Icons.schedule, 'Schedule', () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ScheduleScreen(),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -139,19 +198,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               child: Container(
                 constraints: const BoxConstraints(
-                  maxHeight: 500, // Not full screen
+                  maxHeight: 500,
                 ),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color.fromARGB(255, 28, 70, 126), const Color.fromARGB(255, 19, 12, 27)],
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2B2A4C), Color(0xFF0A1A2F), kBlack],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: kBisque,
-                    width: 2.5,
-                  ),
                   boxShadow: [
                     BoxShadow(
                       color: kBisque.withOpacity(0.18),
@@ -177,106 +232,102 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                       Expanded(
-                        child: isLoading
+                        child: _loadingProjects
                             ? const Center(child: CircularProgressIndicator(color: kBisque))
-                            : error != null
-                                ? Center(child: Text('Error: $error', style: const TextStyle(color: Color.fromARGB(255, 82, 14, 9))))
-                                : projects.isEmpty
-                                    ? const Center(
-                                        child: Text(
-                                          'No projects yet.',
-                                          style: TextStyle(color: kBisque, fontSize: 16),
-                                        ),
-                                      )
-                                    : Scrollbar(
-                                        child: ListView.builder(
-                                          itemCount: projects.length,
-                                          itemBuilder: (context, index) {
-                                            final project = projects[index];
-                                            return Container(
-                                              margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                                              decoration: BoxDecoration(
-                                                color: kDarkBlue,
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: kBisque,
-                                                  width: 1.5,
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: kBisque.withOpacity(0.10),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
+                            : projects.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'No projects yet.',
+                                      style: TextStyle(color: kBisque, fontSize: 16),
+                                    ),
+                                  )
+                                : Scrollbar(
+                                    child: ListView.builder(
+                                      itemCount: projects.length,
+                                      itemBuilder: (context, index) {
+                                        final project = projects[index];
+                                        return Container(
+                                          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            color: kDarkBlue,
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: kBisque,
+                                              width: 2,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: kBisque.withOpacity(0.10),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
                                               ),
-                                              child: ListTile(
-                                                title: Text(
-                                                  project.name,
-                                                  style: const TextStyle(
-                                                      color: kBisque, fontWeight: FontWeight.w400),
-                                                ),
-                                                subtitle: project.file != null
-                                                    ? Text(
-                                                        project.file!.name,
-                                                        style: const TextStyle(
-                                                            color: Colors.white70, fontSize: 10),
-                                                      )
-                                                    : null,
-                                                trailing: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    _AnimatedRedoButton(controller: _redoController),
-                                                    const SizedBox(width: 8),
-                                                    IconButton(
-                                                      icon: const Icon(Icons.delete, color: Color.fromARGB(255, 255, 217, 217)),
-                                                      tooltip: 'Delete Project',
-                                                      onPressed: () async {
-                                                        final confirm = await showDialog<bool>(
-                                                          context: context,
-                                                          builder: (context) => AlertDialog(
-                                                            backgroundColor: kDarkBlue,
-                                                            title: const Text('Delete Project',
-                                                                style: TextStyle(color: kBisque)),
-                                                            content: Text(
-                                                              'Are you sure you want to delete "${project.name}"?',
-                                                              style: const TextStyle(color: Colors.white70),
-                                                            ),
-                                                            actions: [
-                                                              TextButton(
-                                                                onPressed: () => Navigator.of(context).pop(false),
-                                                                child: const Text('Cancel',
-                                                                    style: TextStyle(color: kBisque)),
-                                                              ),
-                                                              TextButton(
-                                                                onPressed: () => Navigator.of(context).pop(true),
-                                                                child: const Text('Delete',
-                                                                    style: TextStyle(color: Color.fromARGB(255, 67, 3, 3))),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        );
-                                                        if (confirm == true) {
-                                                          await _deleteProject(project.name);
-                                                        }
-                                                      },
+                                            ],
+                                          ),
+                                          child: ListTile(
+                                            title: Text(
+                                              project.name,
+                                              style: const TextStyle(
+                                                  color: kBisque, fontWeight: FontWeight.w500),
+                                            ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: kBisque,
+                                                    foregroundColor: kDarkBlue,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(8),
                                                     ),
-                                                  ],
+                                                  ),
+                                                  child: const Text('Test'),
+                                                  onPressed: () => _navigateToTestProject(project),
                                                 ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
+                                                const SizedBox(width: 8),
+IconButton(
+  icon: const Icon(Icons.delete, color: Colors.redAccent),
+  tooltip: 'Delete Project',
+  onPressed: () async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: kDarkBlue,
+        title: const Text('Delete Project', style: TextStyle(color: kBisque)),
+        content: Text(
+          'Are you sure you want to delete "${project.name}"?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: kBisque)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await _deleteProject(project.name);
+    }
+  },
+),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            // Spacer to push bottom bar to bottom
             const Spacer(),
-            // Bottom Navigation Bar
             _CustomBottomBar(
               selectedIndex: _selectedIndex,
               onTap: _onNavBarTap,
@@ -288,12 +339,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _navButton(IconData icon, String label, VoidCallback onPressed, {required BorderSide border}) {
+  Widget _navButton(IconData icon, String label, VoidCallback onPressed) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: kDarkBlue,
         foregroundColor: kBisque,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         elevation: 3,
         textStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -303,52 +354,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onPressed: onPressed,
     );
   }
-
-  void _openCreatePage() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CreatePage()));
-  }
-
-  void _openHistory() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => HistoryScreen()));
-  }
-
-  void _openSchedule() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => const ScheduleScreen(),
-    ));
-  }
 }
 
-class _AnimatedRedoButton extends StatefulWidget {
-  final AnimationController controller;
-  const _AnimatedRedoButton({required this.controller});
-
-  @override
-  State<_AnimatedRedoButton> createState() => _AnimatedRedoButtonState();
-}
-
-class _AnimatedRedoButtonState extends State<_AnimatedRedoButton> {
-  bool _isAnimating = false;
-
+// Dummy ProfilePage for navigation (replace with your real one)
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (!_isAnimating) {
-          setState(() => _isAnimating = true);
-          widget.controller
-              .forward(from: 0)
-              .whenComplete(() => setState(() => _isAnimating = false));
-        }
-      },
-      child: AnimatedBuilder(
-        animation: widget.controller,
-        builder: (context, child) {
-          return Transform.rotate(
-            angle: widget.controller.value * 2 * 3.1415926535,
-            child: Icon(Icons.redo, color: kBisque),
-          );
-        },
+    return Scaffold(
+      backgroundColor: kBlack,
+      appBar: AppBar(
+        backgroundColor: kBlack,
+        title: const Text('Profile', style: TextStyle(color: kBisque)),
+      ),
+      body: const Center(
+        child: Text('Profile Page', style: TextStyle(color: kBisque)),
       ),
     );
   }
@@ -384,10 +404,10 @@ class _CustomBottomBar extends StatelessWidget {
             tooltip: 'Home',
           ),
           IconButton(
-            icon: Icon(Icons.build_outlined,
+            icon: Icon(Icons.chat_bubble_outline,
                 color: selectedIndex == 1 ? kBisque : Colors.white54, size: 28),
             onPressed: () => onTap(1),
-            tooltip: 'Maintenance',
+            tooltip: 'Chat',
           ),
           IconButton(
             icon: Icon(Icons.person_outline,
@@ -400,6 +420,3 @@ class _CustomBottomBar extends StatelessWidget {
     );
   }
 }
-
-
-
