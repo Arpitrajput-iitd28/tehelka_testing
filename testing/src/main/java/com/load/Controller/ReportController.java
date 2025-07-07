@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 import com.load.Model.Report;
-import com.load.Model.ReportMetric;
+
 
 
 import com.load.Service.ReportService;
@@ -29,8 +29,5 @@ public class ReportController {
         return reportService.getReport(reportId);
     }
 
-    @GetMapping("/{reportId}/metrics")
-    public List<ReportMetric> getMetricsForReport(@PathVariable Long reportId) {
-        return reportService.getMetricsForReport(reportId);
-    }
+ 
 }
