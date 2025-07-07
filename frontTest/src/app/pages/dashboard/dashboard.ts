@@ -14,6 +14,19 @@ import {
   TopEndpoint,
   RecentTest 
 } from './dashboard-service';
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+
 import { Subscription } from 'rxjs';
 
 @Component({

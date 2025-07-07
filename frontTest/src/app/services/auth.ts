@@ -27,7 +27,14 @@ export interface User {
   name: string;
   email: string;
 }
+export interface ForgotPasswordRequest {
+    email: string;
+  }
 
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -93,7 +100,24 @@ export class AuthService {
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
+  forgotPassword(email: string): Observable<string> {
+    const request: ForgotPasswordRequest = { email };
+    
+    return this.http.post(`${this.baseUrl}/forgot-password`, request, {
+      headers: this.httpOptions.headers,
+      responseType: 'text'
+    });
+  }
 
+  // Reset password
+  resetPassword(token: string, newPassword: string): Observable<string> {
+    const request: ResetPasswordRequest = { token, newPassword };
+    
+    return this.http.post(`${this.baseUrl}/reset-password`, request, {
+      headers: this.httpOptions.headers,
+      responseType: 'text'
+    });
+  }
   // Check if user is authenticated
   isAuthenticated(): boolean {
     if (!this.isBrowser) return false;
@@ -162,4 +186,6 @@ export class AuthService {
       }
     }
   }
+
+  
 }

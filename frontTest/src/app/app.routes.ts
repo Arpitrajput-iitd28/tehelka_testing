@@ -9,11 +9,15 @@ import { CreateProjectComponent } from './pages/projects/create-project/create-p
 import { ManageProjectsComponent } from './pages/projects/manage-projects/manage-projects';
 import { SchedulesComponent } from './pages/schedules/schedules';
 import { SignupComponent } from './pages/signup/signup';
+import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'signup', component: SignupComponent },
     { path: 'dashboard', component: DashboardComponent },
+    { path: 'forgot-password', component: ForgotPasswordComponent },
+    { path: 'reset-password', component: ResetPasswordComponent },
     
     { path: 'tests', component: ViewTestsComponent },
     { path: 'tests/create', component: CreateTestComponent },
