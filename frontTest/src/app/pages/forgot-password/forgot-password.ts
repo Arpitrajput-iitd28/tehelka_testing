@@ -11,8 +11,8 @@ import { AuthService } from '../../services/auth';
   selector: 'app-forgot-password',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './forgot-password.component.html',
-  styleUrls: ['./forgot-password.component.css']
+  templateUrl: './forgot-password.html',
+  styleUrls: ['./forgot-password.css']
 })
 export class ForgotPasswordComponent implements OnInit {
   forgotPasswordForm: FormGroup;

@@ -54,6 +54,10 @@ public ResponseEntity<List<TestSummary>> getAllTestSummaries(@PathVariable Long 
             @PathVariable Long projectId,
             @RequestPart("test") TestRequest request,
             @RequestPart("file") MultipartFile file) {
+
+        System.out.println("TEST = " + request);
+        System.out.println("FILE = " + file.getOriginalFilename());
+
         try {
             if (file == null || file.isEmpty()) {
                 return ResponseEntity.badRequest().build();
@@ -61,7 +65,9 @@ public ResponseEntity<List<TestSummary>> getAllTestSummaries(@PathVariable Long 
             Test test = testService.createTest(projectId, request, file);
             return ResponseEntity.status(HttpStatus.CREATED).body(test);
         } catch (Exception e) {
+            e.printStackTrace(); // Log full error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    
 }
