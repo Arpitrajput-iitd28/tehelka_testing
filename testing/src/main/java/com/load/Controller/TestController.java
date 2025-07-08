@@ -49,7 +49,7 @@ public ResponseEntity<List<TestSummary>> getAllTestSummaries(@PathVariable Long 
     }
 
     // 4. Create a test under a project
-    @PostMapping("/create")
+    @PostMapping(value = "/create", consumes = "multipart/form-data")
     public ResponseEntity<Test> createTest(
             @PathVariable Long projectId,
             @RequestPart("test") TestRequest request,

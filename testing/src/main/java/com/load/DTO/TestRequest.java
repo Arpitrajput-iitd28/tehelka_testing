@@ -2,12 +2,18 @@ package com.load.DTO;
 
 import com.load.Enums.Action;
 import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.load.Enums.Thread;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class TestRequest {
     private String testName;
     
