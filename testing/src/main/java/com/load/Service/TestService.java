@@ -1,6 +1,7 @@
 package com.load.Service;
 
 import com.load.DTO.TestRequest;
+import com.load.Enums.TestRunStatus;
 import com.load.Model.Project;
 import com.load.Model.Test;
 import com.load.Repository.ProjectRepository;
@@ -82,7 +83,7 @@ public class TestService {
         test.setStartThreadCount(request.getStartThreadCount());
         test.setInitialDelay(request.getInitialDelay());
         test.setScheduledExecutionTime(request.getScheduledExecutionTime());
-        test.setScheduled(request.getScheduledExecutionTime() != null);
+        test.setTestRunStatus(TestRunStatus.SCHEDULED);
 
         test.setFileName(file.getOriginalFilename());
         test.setJmxFileData(file.getBytes());

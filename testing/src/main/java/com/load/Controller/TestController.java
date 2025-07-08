@@ -29,7 +29,7 @@ public class TestController {
 public ResponseEntity<List<TestSummary>> getAllTestSummaries(@PathVariable Long projectId) {
     List<Test> tests = testService.getTestsByProjectId(projectId);
     List<TestSummary> summaries = tests.stream()
-            .map(t -> new TestSummary(t.getTestName(), t.getCreatedAt()))
+            .map(t -> new TestSummary(t.getId(),t.getTestName(), t.getCreatedAt(),t.getTestRunStatus()))
             .collect(Collectors.toList());
     return ResponseEntity.ok(summaries);
 }

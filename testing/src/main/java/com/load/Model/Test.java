@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.load.Enums.Action;
+import com.load.Enums.TestRunStatus;
 import com.load.Enums.Thread;
 
 @Getter
@@ -73,8 +74,10 @@ public class Test {
     @Column(name = "initial_delay")
     private Integer initialDelay;
 
-    @Column(name = "scheduled")
-    private Boolean scheduled = false;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private TestRunStatus testRunStatus;
+    
 
     @Column(name = "scheduled_execution_time")
     private LocalDateTime scheduledExecutionTime;

@@ -3,6 +3,7 @@ package com.load.Service;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.load.Enums.TestRunStatus;
 import com.load.Model.Test;
 import com.load.Repository.TestRepository;
 
@@ -24,12 +25,12 @@ public class TestSchedulerService {
     @Scheduled(fixedRate = 60000)
     public void triggerScheduledTests() {
         LocalDateTime now = LocalDateTime.now();
-        List<Test> testsToRun = testRepository.findByScheduledTrueAndScheduledExecutionTimeBefore(now);
+        List<Test> testsToRun = testRepository.findByTestRunStatusAndScheduledExecutionTimeBefore(TestRunStatus.SCHEDULED,now);
 
         for (Test test : testsToRun) {
             try {
                 runTestService.runTest(test.getId());
-                test.setScheduled(false); // Mark as not scheduled after running
+                test.setTestRunStatus(TestRunStatus.RUNNING); // Mark as not scheduled after running
                 testRepository.save(test);
             } catch (Exception e) {
                 // Optionally log or handle errors

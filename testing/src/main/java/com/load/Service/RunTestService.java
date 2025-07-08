@@ -138,9 +138,12 @@ public class RunTestService {
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test not found with id: " + testId));
 
+    
+        test.setTestRunStatus(TestRunStatus.RUNNING);
+        testRepository.save(test);
+
         RunTest runTest = new RunTest();
         runTest.setTest(test);
-        runTest.setStatus(TestRunStatus.RUNNING);
         runTest.setStartedAt(LocalDateTime.now());
         runTest = runTestRepository.save(runTest);
 
@@ -180,12 +183,13 @@ public class RunTestService {
         runTest.setFinishedAt(LocalDateTime.now());
         runTest.setResultFilePath(resultPath.toAbsolutePath().toString());
         if (exitCode == 0) {
-            runTest.setStatus(TestRunStatus.COMPLETED);
+            test.setTestRunStatus(TestRunStatus.COMPLETED);
         } else {
-            runTest.setStatus(TestRunStatus.FAILED);
+            test.setTestRunStatus(TestRunStatus.FAILED);
             runTest.setErrorMessage("JMeter execution failed with exit code " + exitCode);
         }
         runTestRepository.save(runTest);
+        testRepository.save(test);
 
         if (exitCode != 0) {
             throw new RuntimeException("JMeter execution failed with exit code " + exitCode);
