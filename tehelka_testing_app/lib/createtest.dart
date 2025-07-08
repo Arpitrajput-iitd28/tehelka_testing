@@ -1,40 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'project.dart';
+import 'project_service.dart';
 
 const Color kBlack = Colors.black;
 const Color kDarkBlue = Color(0xFF0A1A2F);
 const Color kBisque = Color(0xFFFFE4C4);
 
-class CreatePage extends StatefulWidget {
-  const CreatePage({Key? key}) : super(key: key);
+class CreateTestScreen extends StatefulWidget {
+  final Project project;
+
+  const CreateTestScreen({Key? key, required this.project}) : super(key: key);
 
   @override
-  State<CreatePage> createState() => _CreatePageState();
+  State<CreateTestScreen> createState() => _CreateTestScreenState();
 }
 
-class _CreatePageState extends State<CreatePage> {
-  // Controllers for main form
+class _CreateTestScreenState extends State<CreateTestScreen> {
   final TextEditingController testNameController = TextEditingController();
   PlatformFile? pickedFile;
   String samplerErrorAction = 'Continue';
   final TextEditingController commentController = TextEditingController();
-
-  // Thread properties
   final TextEditingController usersController = TextEditingController();
   final TextEditingController rampUpController = TextEditingController();
   final TextEditingController loopCountController = TextEditingController();
   final TextEditingController durationController = TextEditingController();
   final TextEditingController startupDelayController = TextEditingController();
 
-  // Dropdown for thread/ultimate
   String threadType = 'Thread Properties';
 
-  // Ultimate thread group
-  // Table for UTG rows (Start thread count & Initial delay)
   List<Map<String, String>> utgRows = [
     {'Start thread count': '', 'Initial delay': ''}
   ];
-  // Table for UTG time rows (Startup time, Hold load for, Shutdown time)
   List<Map<String, String>> utgTimeRows = [
     {'Startup time': '', 'Hold load for': '', 'Shutdown time': ''}
   ];
@@ -46,16 +44,39 @@ class _CreatePageState extends State<CreatePage> {
     'Stop test',
     'Stop test now'
   ];
-
   final List<String> threadTypeOptions = [
     'Thread Properties',
     'Ultimate Thread Properties'
   ];
 
-  // Run/Schedule
   bool scheduleForLater = false;
   DateTime? scheduledDate;
   TimeOfDay? scheduledTime;
+
+  void _handleSubmit() async {
+  // Validate input fields and file selection first
+  final testRequest = {
+    "testName": testNameController.text.trim(),
+    // Add other fields as needed
+  };
+  try {
+    final createdTest = await createTestForProject(
+      projectId: widget.project.id,
+      testRequest: testRequest,
+      file: File(pickedFile!.path!),
+    );
+    // Show success message, pop the screen, or update state
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Test "${createdTest.testName}" created!')),
+    );
+    Navigator.of(context).pop(); // Or update test list as needed
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to create test: $e')),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +85,7 @@ class _CreatePageState extends State<CreatePage> {
       appBar: AppBar(
         backgroundColor: kBlack,
         elevation: 0,
-        title: const Text('Create Test', style: TextStyle(color: kBisque)),
+        title: Text('Create Test for ${widget.project.name}', style: const TextStyle(color: kBisque)),
         iconTheme: const IconThemeData(color: kBisque),
       ),
       body: SingleChildScrollView(
@@ -72,12 +93,9 @@ class _CreatePageState extends State<CreatePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Project Name
-            _sectionLabel('Project Name'),
-            _darkInput(testNameController, 'Enter Project name'),
+            _sectionLabel('Test Name'),
+            _darkInput(testNameController, 'Enter test name'),
             const SizedBox(height: 16),
-
-            // File Upload
             _sectionLabel('File Upload'),
             Row(
               children: [
@@ -111,8 +129,6 @@ class _CreatePageState extends State<CreatePage> {
               ],
             ),
             const SizedBox(height: 16),
-
-            // Sampler Error Action
             _sectionLabel('Action after Sampler Error'),
             DropdownButtonFormField<String>(
               decoration: _dropdownDecoration(),
@@ -133,13 +149,9 @@ class _CreatePageState extends State<CreatePage> {
               },
             ),
             const SizedBox(height: 16),
-
-            // Comment Section
             _sectionLabel('Comments'),
             _darkInput(commentController, 'Add comments', maxLines: 3),
             const SizedBox(height: 24),
-
-            // Thread Type Dropdown
             _sectionLabel('Thread Group Type'),
             DropdownButtonFormField<String>(
               decoration: _dropdownDecoration(),
@@ -160,8 +172,6 @@ class _CreatePageState extends State<CreatePage> {
               },
             ),
             const SizedBox(height: 16),
-
-            // Thread Properties Section (always shown)
             _sectionLabel('Thread Properties'),
             _darkInput(usersController, 'Number of users (threads)', type: TextInputType.number),
             const SizedBox(height: 8),
@@ -173,8 +183,6 @@ class _CreatePageState extends State<CreatePage> {
             const SizedBox(height: 8),
             _darkInput(startupDelayController, 'Startup delay (seconds)', type: TextInputType.number),
             const SizedBox(height: 24),
-
-            // Ultimate Thread Properties Section (only if selected)
             if (threadType == 'Ultimate Thread Properties') ...[
               _sectionLabel('Ultimate Thread Group Table (Startup time, Hold load for, Shutdown time)'),
               _utgTimeTable(),
@@ -217,8 +225,6 @@ class _CreatePageState extends State<CreatePage> {
               ),
               const SizedBox(height: 16),
             ],
-
-            // Run/Schedule Section
             _sectionLabel('Execution'),
             Row(
               children: [
@@ -300,8 +306,6 @@ class _CreatePageState extends State<CreatePage> {
                 ],
               ),
             const SizedBox(height: 24),
-
-            // Submit Button
             Center(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -355,7 +359,8 @@ class _CreatePageState extends State<CreatePage> {
         filled: true,
       );
 
-  Widget _darkInput(TextEditingController controller, String label, {TextInputType type = TextInputType.text, int maxLines = 1}) {
+  Widget _darkInput(TextEditingController controller, String label,
+      {TextInputType type = TextInputType.text, int maxLines = 1}) {
     return TextField(
       controller: controller,
       keyboardType: type,
@@ -521,33 +526,5 @@ class _CreatePageState extends State<CreatePage> {
       ],
     );
   }
-
-  void _handleSubmit() {
-    if (testNameController.text.trim().isEmpty || pickedFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter test name and upload a file.')),
-      );
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: kDarkBlue,
-        title: const Text('Test Created', style: TextStyle(color: kBisque)),
-        content: Text(
-          scheduleForLater
-              ? 'Test scheduled for ${scheduledDate != null && scheduledTime != null ? "${scheduledDate!.day.toString().padLeft(2, '0')}-${scheduledDate!.month.toString().padLeft(2, '0')}-${scheduledDate!.year} at ${scheduledTime!.format(context)}" : "selected date/time"}'
-              : 'Test will run now and appear in Projects.',
-          style: const TextStyle(color: kBisque),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-            child: const Text('OK', style: TextStyle(color: kBisque)),
-          ),
-        ],
-      ),
-    );
-    // TODO: Actually add to project list and/or schedule list via your backend or state management.
-  }
 }
+

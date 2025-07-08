@@ -4,21 +4,11 @@ import 'profile.dart';
 import 'testscreen.dart';
 import 'history_screen.dart';
 import 'schedule.dart';
+import 'project.dart';
 
 const Color kBlack = Colors.black;
 const Color kDarkBlue = Color(0xFF0A1A2F);
 const Color kBisque = Color(0xFFFFE4C4);
-
-class Project {
-  final String name;
-  Project(this.name);
-
-  factory Project.fromJson(Map<String, dynamic> json) {
-    return Project(
-      json['name'] ?? "",
-    );
-  }
-}
 
 
 class HomeScreen extends StatefulWidget {
@@ -31,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Project> projects = [];
   int _selectedIndex = 0;
   bool _loadingProjects = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -76,7 +67,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _createProject(String name) async {
+  setState(() => isLoading = true);
+  try {
+    final created = await createProject(name); 
+    setState(() {
+      projects.add(created); 
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Project "$name" created!')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to create project: $e')),
+    );
+  }
+  setState(() => isLoading = false);
+}
+
+
   void _showCreateProjectDialog() {
+  final controller = TextEditingController();
   showDialog(
     context: context,
     builder: (context) {
@@ -93,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
+                  controller: controller,
                   decoration: InputDecoration(labelText: 'Project Name'),
                 ),
               ],
@@ -105,7 +117,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                Navigator.of(context).pop();
+                _createProject(name);
+              }
+            },
             child: Text('Create'),
           ),
         ],
@@ -114,25 +132,15 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 }
 
-  void _onTestProject(Project project) async {
-  try {
-    await startTest(project.name); // Call the API to start the test
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => TestScreen(project: project),
-      ),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to start test: $e')),
-    );
-  }
-}
 
+  void _onTestProject(Project project) {
+    _navigateToTestProject(project);
+  }
 
   Future<void> _deleteProject(String projectName) async {
   try {
-    await deleteProject(projectName);
+    final project = projects.firstWhere((p) => p.name == projectName);
+    await deleteProject(project.id);
     setState(() {
       projects.removeWhere((p) => p.name == projectName);
     });
