@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:tehelka_testing_app/createtest.dart';
 import 'project.dart';
-import 'project_service.dart'; // Make sure this contains fetchTestsForProject
+import 'project_service.dart';
+import 'createtest.dart';
 
 const Color kBlack = Colors.black;
 const Color kDarkBlue = Color(0xFF0A1A2F);
 const Color kBisque = Color(0xFFFFE4C4);
 
 class TestItem {
+  final int id;
   final String testName;
   final DateTime createdAt;
-  final String status; // Optional, if your backend provides it
+  final String status;
 
   TestItem({
+    required this.id,
     required this.testName,
     required this.createdAt,
     this.status = '',
   });
 
+  
+
   factory TestItem.fromJson(Map<String, dynamic> json) {
     return TestItem(
+      id: json['id'] ?? 0,
       testName: json['testName'] ?? '',
       createdAt: DateTime.parse(json['createdAt']),
       status: (json['status'] ?? '').toString().toUpperCase(),
@@ -29,6 +34,7 @@ class TestItem {
 
 class TestScreen extends StatefulWidget {
   final Project project;
+
   const TestScreen({Key? key, required this.project}) : super(key: key);
 
   @override
@@ -61,6 +67,42 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
+  Future<void> _deleteTest(int testId) async {
+    try {
+      await deleteTest(widget.project.id, testId);
+      setState(() {
+        tests.removeWhere((t) => t.id == testId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Test deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete test: $e')),
+      );
+    }
+  }
+
+  Future<void> _redoTest(int testId) async {
+    try {
+      final testDetails = await fetchTestById(widget.project.id, testId);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CreateTestScreen(
+            project: widget.project,
+            initialTest: testDetails,
+            isEditing: true,
+          ),
+        ),
+      ).then((_) => _loadTests());
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load test: $e')),
+      );
+    }
+  }
+
   String _formatDateTime(DateTime dt) {
     final date = "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
     final time = "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
@@ -68,14 +110,14 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'running':
+    switch (status.toUpperCase()) {
+      case 'RUNNING':
         return Colors.blueAccent;
-      case 'completed':
+      case 'COMPLETED':
         return Colors.green;
-      case 'scheduled':
+      case 'SCHEDULED':
         return Colors.orange;
-      case 'failed':
+      case 'FAILED':
         return Colors.redAccent;
       default:
         return kBisque;
@@ -118,12 +160,13 @@ class _TestScreenState extends State<TestScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CreateTestScreen(project: widget.project,),
+                              builder: (context) => CreateTestScreen(
+                                project: widget.project,
+                                isEditing: false,
+                                initialTest: null, // Now allowed since nullable
+                              ),
                             ),
-                          ).then((_) {
-                            // Refresh tests after creating a new test
-                            _loadTests();
-                          });
+                          ).then((_) => _loadTests());
                         },
                         child: const Text('Create Tests'),
                       ),
@@ -228,7 +271,8 @@ class _TestScreenState extends State<TestScreen> {
                                                               borderRadius: BorderRadius.circular(8),
                                                             ),
                                                             child: Text(
-                                                              test.status[0].toUpperCase() + test.status.substring(1).toLowerCase(),
+                                                              test.status[0].toUpperCase() +
+                                                                  test.status.substring(1).toLowerCase(),
                                                               style: TextStyle(
                                                                 color: _statusColor(test.status),
                                                                 fontWeight: FontWeight.bold,
@@ -247,14 +291,14 @@ class _TestScreenState extends State<TestScreen> {
                                                       icon: const Icon(Icons.redo, color: kBisque),
                                                       tooltip: 'Redo Test',
                                                       onPressed: () {
-                                                        // Add redo functionality later
+                                                        _redoTest(test.id);
                                                       },
                                                     ),
                                                     IconButton(
                                                       icon: const Icon(Icons.delete, color: Colors.redAccent),
                                                       tooltip: 'Delete Test',
                                                       onPressed: () {
-                                                        // Add delete functionality later
+                                                        _deleteTest(test.id);
                                                       },
                                                     ),
                                                   ],

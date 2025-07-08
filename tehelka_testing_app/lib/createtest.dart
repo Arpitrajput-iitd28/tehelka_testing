@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:tehelka_testing_app/testscreen.dart';
 import 'dart:io';
 import 'project.dart';
 import 'project_service.dart';
@@ -10,8 +11,16 @@ const Color kBisque = Color(0xFFFFE4C4);
 
 class CreateTestScreen extends StatefulWidget {
   final Project project;
+  final TestItem? initialTest;
+  final bool isEditing;
 
-  const CreateTestScreen({Key? key, required this.project}) : super(key: key);
+
+  const CreateTestScreen({
+    Key? key, 
+    required this.project,
+    required this.initialTest,
+    required this.isEditing
+  }) : super(key: key);
 
   @override
   State<CreateTestScreen> createState() => _CreateTestScreenState();

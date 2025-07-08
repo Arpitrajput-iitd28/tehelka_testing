@@ -13,7 +13,11 @@ import 'package:http_parser/http_parser.dart';
 
 
 const String baseUrl = 'http://192.168.1.22:8080'; 
+
+//
 //API FOR LOGIN , SIGNUP AND FORGOT PASSWORD
+//
+
 
 Future<bool> loginUser(String email, String password) async {
   final response = await http.post(
@@ -57,10 +61,22 @@ Future<bool> resetPassword(String email) async {
   );
   return response.statusCode == 200 || response.statusCode == 201;
 }
+
+
+
+
+
+
 ///
 /// API'S FOR HOME.DART
 ///
 ///
+
+
+
+
+
+
 Future<List<Project>> fetchProjects() async {
   final response = await http.get(Uri.parse('$baseUrl/api/projects'));
   if (response.statusCode == 200 || response.statusCode == 201) {
@@ -103,6 +119,18 @@ Future<List<TestItem>> fetchTestsForProject(int projectId) async {
   }
 }
 
+
+
+
+
+
+///
+///
+///
+///API FOR TEST PAGE
+///
+///
+///
 
 Future<TestItem> createTestForProject({
   required int projectId,
