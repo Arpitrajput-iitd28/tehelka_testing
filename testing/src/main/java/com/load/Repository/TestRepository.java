@@ -13,5 +13,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TestRepository extends JpaRepository<Test, Long> {
     List<Test> findByTestRunStatusAndScheduledExecutionTimeBefore(TestRunStatus status, LocalDateTime time);
     List<Test> findByProjectId(Long projectId);
+    List<Test> findByTestRunStatus(TestRunStatus status);
 }
 

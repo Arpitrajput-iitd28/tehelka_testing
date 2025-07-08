@@ -11,5 +11,7 @@ import com.load.Model.Test;
 public interface RunTestRepository extends JpaRepository<RunTest, Long> {
     List<RunTest> findByTest(Test test);
     List<RunTest> findByTest_Id(Long testId);
+    
+
 }
 

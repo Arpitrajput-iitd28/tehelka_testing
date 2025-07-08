@@ -1,5 +1,6 @@
 package com.load.Controller;
 
+import com.load.DTO.ScheduledSummary;
 import com.load.DTO.TestRequest;
 import com.load.DTO.TestSummary;
 import com.load.Model.Test;
@@ -39,6 +40,16 @@ public ResponseEntity<List<TestSummary>> getAllTestSummaries(@PathVariable Long 
     public ResponseEntity<Test> getTest(@PathVariable Long testId) {
         Test test = testService.getTest(testId);
         return ResponseEntity.ok(test);
+    }
+
+    @GetMapping("/scheduled")
+    public List<ScheduledSummary> getAllScheduledTests() {
+        return testService.getAllScheduledTests();
+    }
+
+    @GetMapping("/completed")
+    public List<ScheduledSummary> getAllCompletedTests() {
+        return testService.getAllScheduledTests();
     }
 
     // 3. Delete a test

@@ -1,5 +1,6 @@
 package com.load.Service;
 
+import com.load.DTO.ScheduledSummary;
 import com.load.DTO.TestRequest;
 import com.load.Enums.TestRunStatus;
 import com.load.Model.Project;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class TestService {
@@ -50,6 +52,30 @@ public class TestService {
             throw new RuntimeException("Test not found with id: " + id);
         }
         testRepository.deleteById(id);
+    }
+
+    public List<ScheduledSummary> getAllScheduledTests() {
+        List<Test> scheduledTests = testRepository.findByTestRunStatus(TestRunStatus.SCHEDULED);
+        return scheduledTests.stream()
+            .map(test -> new ScheduledSummary(
+                test.getProject().getName(),
+                test.getTestName(),
+                test.getCreatedAt(),
+                test.getScheduledExecutionTime()
+            ))
+            .collect(Collectors.toList());
+    }
+
+    public List<ScheduledSummary> getAllCompletedTests() {
+        List<Test> scheduledTests = testRepository.findByTestRunStatus(TestRunStatus.COMPLETED);
+        return scheduledTests.stream()
+            .map(test -> new ScheduledSummary(
+                test.getProject().getName(),
+                test.getTestName(),
+                test.getCreatedAt(),
+                test.getScheduledExecutionTime()
+            ))
+            .collect(Collectors.toList());
     }
 
     // Create a new test under a project
