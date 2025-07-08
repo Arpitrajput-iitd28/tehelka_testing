@@ -33,7 +33,7 @@ Future<bool> registerUser({
   required String confirmPassword,
 }) async {
   final response = await http.post(
-    Uri.parse('$baseUrl/api/auth/register'),
+    Uri.parse('$baseUrl/api/auth/signup'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'email': email,
@@ -70,7 +70,7 @@ Future<Project> createProject(String title) async {
   final response = await http.post(
     Uri.parse('$baseUrl/api/projects/create'),
     headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'customName': title}),
+    body: jsonEncode({'name': title}),
   );
   if (response.statusCode == 200 || response.statusCode == 201) {
     return Project.fromJson(jsonDecode(response.body));
@@ -120,17 +120,6 @@ Future<void> downloadReport(String url, String fileName) async {
 }
 
 
-// Fetch scheduled tests
-Future<List<ScheduledTest>> fetchSchedule() async {
-  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/scheduled-tests'));
-  if (response.statusCode == 200) {
-    final List data = jsonDecode(response.body);
-    return data.map((json) => ScheduledTest.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to load schedule');
-  }
-} 
-
 // Fetch test history/reports
 Future<List<TestReport>> fetchTestReports() async {
   final response = await http.get(Uri.parse('$baseUrl/api/load-tests/report/history'));
@@ -139,5 +128,16 @@ Future<List<TestReport>> fetchTestReports() async {
     return data.map((json) => TestReport.fromJson(json)).toList();
   } else {
     throw Exception('Failed to load reports');
+  }
+}
+// Fetch test schedule
+
+Future<List<ScheduledTest>> fetchSchedule() async {
+  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/schedule'));
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.map((json) => ScheduledTest.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load schedule');
   }
 }

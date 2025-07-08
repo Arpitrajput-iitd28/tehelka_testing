@@ -15,7 +15,7 @@ class Project {
 
   factory Project.fromJson(Map<String, dynamic> json) {
     return Project(
-      json['customName'] ?? json['name'] ?? '',
+      json['name'] ?? "",
     );
   }
 }
@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 2) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => const ProfilePage(),
+          builder: (context) => const ProfilePage(),
         ),
       );
     }
@@ -77,58 +77,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCreateProjectDialog() {
-    String? projectName;
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: kDarkBlue,
-          title: const Text('Create Project', style: TextStyle(color: kBisque)),
-          content: TextField(
-            style: const TextStyle(color: kBisque),
-            decoration: InputDecoration(
-              labelText: 'Project Name',
-              labelStyle: const TextStyle(color: kBisque),
-              enabledBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: kBisque),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: kBisque, width: 2),
-              ),
-            ),
-            onChanged: (val) => projectName = val,
+  showDialog(
+    context: context,
+    builder: (context) {
+      final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+      final availableHeight = MediaQuery.of(context).size.height - viewInsets - 80;
+      return AlertDialog(
+        title: Text('Create Project'),
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: availableHeight > 200 ? availableHeight : 200,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: kBisque)),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  decoration: InputDecoration(labelText: 'Project Name'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () async {
-                if (projectName != null && projectName!.trim().isNotEmpty) {
-                  try {
-                    final newProject = await createProject(projectName!.trim());
-                    setState(() {
-                      projects.add(newProject as Project);
-                    });
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Project "$projectName" created!')),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to create project: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Create', style: TextStyle(color: kBisque)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {},
+            child: Text('Create'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   void _onTestProject(Project project) async {
   try {
     await startTest(project.name); // Call the API to start the test
@@ -217,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF2B2A4C), Color(0xFF0A1A2F), kBlack],
+                    colors: [Color.fromARGB(255, 49, 23, 94), Color.fromARGB(255, 8, 51, 106), Color.fromARGB(255, 0, 19, 29)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -371,24 +356,6 @@ IconButton(
   }
 }
 
-// Dummy ProfilePage for navigation (replace with your real one)
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBlack,
-      appBar: AppBar(
-        backgroundColor: kBlack,
-        title: const Text('Profile', style: TextStyle(color: kBisque)),
-      ),
-      body: const Center(
-        child: Text('Profile Page', style: TextStyle(color: kBisque)),
-      ),
-    );
-  }
-}
-
 class _CustomBottomBar extends StatelessWidget {
   final int selectedIndex;
   final void Function(int) onTap;
@@ -427,8 +394,12 @@ class _CustomBottomBar extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.person_outline,
                 color: selectedIndex == 2 ? kBisque : Colors.white54, size: 28),
-            onPressed: () => onTap(2),
             tooltip: 'Profile',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>  ProfilePage(),
+              ),
+            ),
           ),
         ],
       ),

@@ -19,11 +19,11 @@ class Project {
   Project(this.name, {this.file});
 
   factory Project.fromJson(Map json) {
-    return Project(json['customName'] ?? json['name'] ?? '');
+    return Project(json['name'] ?? '');
   }
 
   Map toJson() {
-    return {'customName': name};
+    return {'name': name};
   }
 } 
 
@@ -67,5 +67,3 @@ class ScheduledTest {
     );
   }
 } 
-
-
