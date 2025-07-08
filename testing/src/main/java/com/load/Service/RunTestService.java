@@ -156,7 +156,7 @@ public class RunTestService {
         Path resultPath = Files.createTempFile("jmeter-result-", ".jtl");
 
         List<String> command = new ArrayList<>();
-        command.add("jmeter");
+        command.add("/Users/snehasishbala/Downloads/apache-jmeter-5.6.3/bin/jmeter");
         command.add("-n");
         command.add("-t");
         command.add(tempJmxPath.toAbsolutePath().toString());

@@ -76,7 +76,7 @@ public class Test {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private TestRunStatus testRunStatus;
+    private TestRunStatus testRunStatus=(TestRunStatus.SCHEDULED);
     
 
     @Column(name = "scheduled_execution_time")
