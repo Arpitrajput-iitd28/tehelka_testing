@@ -5,6 +5,7 @@ import 'testscreen.dart';
 import 'history_screen.dart';
 import 'schedule.dart';
 import 'project.dart';
+import "createjmx.dart";
 
 const Color kBlack = Colors.black;
 const Color kDarkBlue = Color(0xFF0A1A2F);
@@ -87,50 +88,82 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   void _showCreateProjectDialog() {
-  final controller = TextEditingController();
-  showDialog(
-    context: context,
-    builder: (context) {
-      final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-      final availableHeight = MediaQuery.of(context).size.height - viewInsets - 80;
-      return AlertDialog(
-        title: Text('Create Project'),
-        content: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: availableHeight > 200 ? availableHeight : 200,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(labelText: 'Project Name'),
-                ),
-              ],
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+        final availableHeight = MediaQuery.of(context).size.height - viewInsets - 80;
+        return AlertDialog(
+          backgroundColor: kDarkBlue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), 
+            side: BorderSide(
+              color: kBisque, 
+              width: 1.0,
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
+          title: Text(
+            'Create Project',
+            style: const TextStyle(
+              color: kBisque,
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                Navigator.of(context).pop();
-                _createProject(name);
-              }
-            },
-            child: Text('Create'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: availableHeight > 200 ? availableHeight : 200,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: 'Project Name',
+                      labelStyle: const TextStyle(color: Colors.white70), 
+                      enabledBorder: const OutlineInputBorder( 
+                        borderSide: BorderSide(color: kBisque, width: 1.0),
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                      focusedBorder: OutlineInputBorder( // Border when focused
+                        borderSide: BorderSide(color: kBisque, width: 2.0),
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                    ),
+                    style: const TextStyle(color: kBisque),
+                    cursorColor: kBisque, 
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      );
-    },
-  );
-}
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color.fromARGB(255, 247, 176, 154)), 
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  Navigator.of(context).pop();
+                  _createProject(name);
+                }
+              },
+              child: const Text(
+                'Create',
+                style: TextStyle(color: kBisque), 
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
 
   void _onTestProject(Project project) {
@@ -163,8 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: kBlack,
         elevation: 0,
         title: const Text(
-          'Veritas Load',
-          style: TextStyle(color: kBisque),
+          'VERITAS LOAD',
+          style: TextStyle(color: kBisque,
+              fontWeight: FontWeight.bold, ),
         ),
         iconTheme: const IconThemeData(color: kBisque),
       ),
@@ -180,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _navButton(Icons.history, 'History', () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => HistoryScreen(),
+                        builder: (context) => HistoryPage(),
                       ),
                     );
                   }),
@@ -188,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _navButton(Icons.schedule, 'Schedule', () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ScheduleScreen(),
+                        builder: (context) => SchedulePage(),
                       ),
                     );
                   }),
@@ -197,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             // Divider
             const Divider(
-              thickness: 3,
+              thickness: 2,
               color: kBisque,
               height: 28,
             ),
@@ -210,10 +244,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color.fromARGB(255, 49, 23, 94), Color.fromARGB(255, 8, 51, 106), Color.fromARGB(255, 0, 19, 29)],
+                    colors: [Color.fromARGB(255, 69, 0, 73), Color.fromARGB(255, 9, 34, 66), Color.fromARGB(255, 0, 0, 0)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
+                  border: Border.all(color: kBisque, width: 2),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -235,7 +270,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                             color: kBisque,
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -261,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(
                                               color: kBisque,
-                                              width: 2,
+                                              width: 1.5,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
@@ -293,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
 
 IconButton(
-  icon: const Icon(Icons.delete, color: Colors.redAccent),
+  icon: const Icon(Icons.delete, color: Color.fromARGB(255, 243, 223, 223)),
   tooltip: 'Delete Project',
   onPressed: () async {
     final confirm = await showDialog<bool>(
@@ -312,7 +346,7 @@ IconButton(
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Delete', style: TextStyle(color: kBisque)),
           ),
         ],
       ),
@@ -350,12 +384,16 @@ IconButton(
   Widget _navButton(IconData icon, String label, VoidCallback onPressed) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
-        backgroundColor: kDarkBlue,
+        backgroundColor: const Color.fromARGB(255, 11, 35, 66),
         foregroundColor: kBisque,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         elevation: 3,
         textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        side : const BorderSide(
+          color: kBisque,
+          width: 0.75,
+        ),
       ),
       icon: Icon(icon, color: kBisque, size: 22),
       label: Text(label, style: const TextStyle(color: kBisque)),
@@ -376,6 +414,11 @@ class _CustomBottomBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: kDarkBlue,
         borderRadius: BorderRadius.circular(24),
+        border: const Border(left: BorderSide(color: kBisque,width: 1.5,),
+          top: BorderSide(color: kBisque,width: 1.5,),
+          right: BorderSide(color: kBisque,width: 1.5,),
+          bottom: BorderSide(color: kBisque,width: 1.5,),
+        ),
         boxShadow: [
           BoxShadow(
             color: kBisque.withOpacity(0.18),
@@ -394,9 +437,13 @@ class _CustomBottomBar extends StatelessWidget {
             tooltip: 'Home',
           ),
           IconButton(
-            icon: Icon(Icons.chat_bubble_outline,
+            icon: Icon(Icons.create_new_folder_outlined,
                 color: selectedIndex == 1 ? kBisque : Colors.white54, size: 28),
-            onPressed: () => onTap(1),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>  CreateJMXPage(),
+              ),
+            ),
             tooltip: 'Chat',
           ),
           IconButton(

@@ -261,11 +261,40 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
                     child: GestureDetector(
                       onTap: () async {
                         final picked = await showDatePicker(
-                          context: context,
-                          initialDate: scheduledDate ?? DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
+  context: context,
+  initialDate: scheduledDate ?? DateTime.now(),
+  firstDate: DateTime.now(),
+  lastDate: DateTime.now().add(const Duration(days: 365)),
+  builder: (BuildContext context, Widget? child) {
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: kBisque,
+          onPrimary: kDarkBlue,
+          surface: kDarkBlue,
+          onSurface: kBisque,
+          background: kBlack,
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: kBisque,
+          ),
+        ),
+        dialogTheme: DialogTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+            side: const BorderSide(
+              color: kBisque,
+              width: 1.0,
+            ),
+          ),
+          backgroundColor: kDarkBlue,
+        ),
+      ),
+      child: child!,
+    );
+  },
+);
                         if (picked != null) {
                           setState(() {
                             scheduledDate = picked;
@@ -290,15 +319,44 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
                     child: GestureDetector(
                       onTap: () async {
                         final picked = await showTimePicker(
-                          context: context,
-                          initialTime: scheduledTime ?? TimeOfDay.now(),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            scheduledTime = picked;
-                          });
-                        }
-                      },
+                                context: context,
+                                initialTime: scheduledTime ?? TimeOfDay.now(),
+                                builder: (BuildContext context, Widget? child) {
+                                  return Theme(
+                                    data: ThemeData.dark().copyWith(
+                                      colorScheme: const ColorScheme.dark(
+                                        primary: kBisque,
+                                        onPrimary: kDarkBlue,
+                                        surface: kDarkBlue,
+                                        onSurface: kBisque,
+                                        background: kBlack,
+                                      ),
+                                      textButtonTheme: TextButtonThemeData(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: kBisque,
+                                        ),
+                                      ),
+                                      dialogTheme: DialogTheme(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20.0),
+                                          side: const BorderSide(
+                                            color: kBisque,
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        backgroundColor: kDarkBlue,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                                        setState(() {
+                                                          scheduledTime = picked;
+                                                        });
+                                                      }
+                                                    },
                       child: AbsorbPointer(
                         child: TextField(
                           decoration: _inputDecoration('Time'),

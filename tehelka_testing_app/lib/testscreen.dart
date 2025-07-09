@@ -20,14 +20,12 @@ class TestItem {
     this.status = '',
   });
 
-  
-
   factory TestItem.fromJson(Map<String, dynamic> json) {
     return TestItem(
       id: json['id'] ?? 0,
       testName: json['testName'] ?? '',
       createdAt: DateTime.parse(json['createdAt']),
-      status: (json['status'] ?? '').toString().toUpperCase(),
+      status: (json['testRunStatus'] ?? '').toString().toUpperCase(),
     );
   }
 }
@@ -112,13 +110,13 @@ class _TestScreenState extends State<TestScreen> {
   Color _statusColor(String status) {
     switch (status.toUpperCase()) {
       case 'RUNNING':
-        return Colors.blueAccent;
+        return const Color.fromARGB(255, 28, 101, 226);
       case 'COMPLETED':
-        return Colors.green;
+        return const Color.fromARGB(255, 16, 179, 21);
       case 'SCHEDULED':
-        return Colors.orange;
+        return const Color.fromARGB(255, 255, 153, 0);
       case 'FAILED':
-        return Colors.redAccent;
+        return const Color.fromARGB(255, 145, 4, 4);
       default:
         return kBisque;
     }
@@ -163,7 +161,7 @@ class _TestScreenState extends State<TestScreen> {
                               builder: (context) => CreateTestScreen(
                                 project: widget.project,
                                 isEditing: false,
-                                initialTest: null, // Now allowed since nullable
+                                initialTest: null,
                               ),
                             ),
                           ).then((_) => _loadTests());
@@ -183,15 +181,12 @@ class _TestScreenState extends State<TestScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              Color.fromARGB(255, 61, 59, 118),
-                              Color.fromARGB(255, 13, 39, 72),
-                              kBlack
-                            ],
+                            colors: [Color.fromARGB(255, 69, 0, 73), Color.fromARGB(255, 9, 34, 66), Color.fromARGB(255, 0, 0, 0)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: kBisque, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: kBisque.withOpacity(0.18),
@@ -212,7 +207,6 @@ class _TestScreenState extends State<TestScreen> {
                                   style: TextStyle(
                                     color: kBisque,
                                     fontSize: 20,
-                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -236,7 +230,7 @@ class _TestScreenState extends State<TestScreen> {
                                                 borderRadius: BorderRadius.circular(12),
                                                 border: Border.all(
                                                   color: kBisque,
-                                                  width: 2,
+                                                  width: 1.5,
                                                 ),
                                                 boxShadow: [
                                                   BoxShadow(

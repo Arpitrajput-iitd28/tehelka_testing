@@ -67,10 +67,17 @@ Future<bool> resetPassword(String email) async {
 
 
 
+
+
+
+
 ///
 /// API'S FOR HOME.DART
 ///
 ///
+
+
+
 
 
 
@@ -124,6 +131,11 @@ Future<List<TestItem>> fetchTestsForProject(int projectId) async {
 
 
 
+
+
+
+
+
 ///
 ///
 ///
@@ -131,6 +143,13 @@ Future<List<TestItem>> fetchTestsForProject(int projectId) async {
 ///
 ///
 ///
+
+
+
+
+
+
+
 
 Future<TestItem> createTestForProject({
   required int projectId,
@@ -164,9 +183,8 @@ Future<TestItem> createTestForProject({
     throw Exception('Failed to create test: ${response.body}');
 }
 }
-//
-//
-//
+
+
 Future<List<TestReport>> fetchAllTestReports() async {
   final response = await http.get(Uri.parse('$baseUrl/reports'));
   if (response.statusCode == 200) {
@@ -177,32 +195,143 @@ Future<List<TestReport>> fetchAllTestReports() async {
   }
 }
 
-Future<void> downloadReport(String url, String fileName) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final filePath = '${dir.path}/$fileName';
-  await Dio().download(url, filePath);
-  await OpenFile.open(filePath); 
-}
-
-
-// Fetch test history/reports
-Future<List<TestReport>> fetchTestReports() async {
-  final response = await http.get(Uri.parse('$baseUrl/api/load-tests/report/history'));
-  if (response.statusCode == 200) {
-    final List data = jsonDecode(response.body);
-    return data.map((json) => TestReport.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to load reports');
+Future<void> deleteTest(int projectId, int testId) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/api/projects/$projectId/tests/$testId'),
+  );
+  if (response.statusCode != 200 && response.statusCode != 204) {
+    throw Exception('Failed to delete test');
   }
 }
-// Fetch test schedule
 
-// Future<List<ScheduledTest>> fetchSchedule() async {
-//   final response = await http.get(Uri.parse('$baseUrl/api/load-tests/schedule'));
+
+Future<TestItem> fetchTestById(int projectId, int testId) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/projects/$projectId/tests/$testId'),
+  );
+  if (response.statusCode == 200) {
+    return TestItem.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Failed to fetch test');
+  }
+}
+
+
+
+//
+//
+//
+//API FOR SCHEDULED TESTS
+//
+//
+//
+
+class ScheduledSummary {
+  final String projectName;
+  final String testName;
+  final DateTime createdAt;
+  final DateTime scheduledExecutionTime;
+
+  ScheduledSummary({
+    required this.projectName,
+    required this.testName,
+    required this.createdAt,
+    required this.scheduledExecutionTime,
+  });
+
+  factory ScheduledSummary.fromJson(Map<String, dynamic> json) {
+    return ScheduledSummary(
+      projectName: json['projectName'] ?? '',
+      testName: json['testName'] ?? '',
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+      scheduledExecutionTime: json['scheduledExecutionTime'] != null
+          ? DateTime.parse(json['scheduledExecutionTime'])
+          : DateTime.now(),
+    );
+  }
+}
+
+Future<List<ScheduledSummary>> fetchScheduledTests() async {
+  final response = await http.get(Uri.parse('$baseUrl/api/tests/scheduled')); 
+  if (response.statusCode == 200) {
+    final List data = json.decode(response.body);
+    return data.map((item) => ScheduledSummary.fromJson(item)).toList();
+  } else {
+    throw Exception('Failed to load scheduled tests');
+  }
+}
+
+
+
+
+
+
+
+//
+//
+//
+//
+//API FOR HISTORY
+//
+//
+//
+//
+
+
+
+
+
+
+
+class CompletedTestSummary {
+  final String projectName;
+  final String testName;
+  final DateTime createdAt;
+  final DateTime scheduledExecutionTime;
+
+  CompletedTestSummary({
+    required this.projectName,
+    required this.testName,
+    required this.createdAt,
+    required this.scheduledExecutionTime,
+  });
+
+  factory CompletedTestSummary.fromJson(Map<String, dynamic> json) {
+  return CompletedTestSummary(
+    projectName: json['projectName'] ?? '',
+    testName: json['testName'] ?? '',
+    createdAt: json['createdAt'] != null
+        ? DateTime.parse(json['createdAt'])
+        : DateTime.now(),
+    scheduledExecutionTime: json['scheduledExecutionTime'] != null
+        ? DateTime.parse(json['scheduledExecutionTime'])
+        : DateTime.now(),
+  );
+}
+}
+
+Future<List<CompletedTestSummary>> fetchCompletedTests() async {
+  final response = await http.get(Uri.parse('$baseUrl/api/tests/completed'));
+  if (response.statusCode == 200) {
+    final List data = json.decode(response.body);
+    return data.map((item) => CompletedTestSummary.fromJson(item)).toList();
+  } else {
+    throw Exception('Failed to load completed tests');
+  }
+}
+
+// // Download report for a test (returns file bytes)
+// Future<List<int>> downloadTestReport(String testName, String projectName, String reportid) async {
+//   final url = '$baseUrl/api/reports/$reportid/download');
+//   final response = await http.get(Uri.parse(url));
 //   if (response.statusCode == 200) {
-//     final List data = jsonDecode(response.body);
-//     return data.map((json) => ScheduledTest.fromJson(json)).toList();
+//     return response.bodyBytes;
 //   } else {
-//     throw Exception('Failed to load schedule');
+//     throw Exception('Failed to download report');
 //   }
 // }
+
+
+
