@@ -1,5 +1,6 @@
 package com.load.Controller;
 
+import com.load.DTO.ReportResultDTO;
 import com.load.Service.RunTestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +22,12 @@ public class RunTestController {
      * @return The path to the JMeter result file or an error message.
      */
     @PostMapping("/{testId}")
-    public ResponseEntity<String> runTest(@PathVariable Long testId) {
+    public ResponseEntity<ReportResultDTO> runTest(@PathVariable Long testId) {
         try {
-            String resultPath = runTestService.runTest(testId);
-            return ResponseEntity.ok("JMeter test executed successfully. Results at: " + resultPath);
+            ReportResultDTO result = runTestService.runTest(testId);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Failed to run JMeter test: " + e.getMessage());
+            return ResponseEntity.status(500).build();
         }
     }
 }

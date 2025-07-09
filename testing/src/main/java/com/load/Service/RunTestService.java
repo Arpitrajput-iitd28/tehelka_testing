@@ -1,6 +1,8 @@
 package com.load.Service;
 
+import com.load.DTO.ReportResultDTO;
 import com.load.Enums.TestRunStatus;
+import com.load.Model.Report;
 import com.load.Model.RunTest;
 import com.load.Model.Test;
 import com.load.Repository.RunTestRepository;
@@ -139,7 +141,7 @@ public class RunTestService {
         transformer.transform(source, result);
     }
 
-    public String runTest(Long testId) throws Exception {
+    public ReportResultDTO runTest(Long testId) throws Exception {
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test not found with id: " + testId));
 
@@ -190,6 +192,7 @@ public class RunTestService {
         // Update runTest status and details
         runTest.setFinishedAt(LocalDateTime.now());
         runTest.setResultFilePath(resultPath.toAbsolutePath().toString());
+        Report report=null;
         if (exitCode == 0) {
             test.setTestRunStatus(TestRunStatus.COMPLETED);
             Map<String, Object> jtlData = JtlParser.parseJtl(resultPath);
@@ -207,7 +210,7 @@ public class RunTestService {
             );
 
 
-        reportService.createReport(
+    report=reportService.createReport(
             test.getProject().getId(),
             runTest.getId(),
             summaryJson,
@@ -226,6 +229,6 @@ public class RunTestService {
             throw new RuntimeException("JMeter execution failed with exit code " + exitCode);
         }
 
-        return resultPath.toAbsolutePath().toString();
+        return new ReportResultDTO(report.getId(), report.getHtmlReportContent());
     }
 }
