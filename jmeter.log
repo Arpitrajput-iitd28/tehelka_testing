@@ -1,92 +1,62 @@
-2025-07-08 15:54:11,387 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
-2025-07-08 15:54:11,395 INFO o.a.j.JMeter: Loading user properties from: /Users/snehasishbala/Downloads/apache-jmeter-5.6.3/bin/user.properties
-2025-07-08 15:54:11,396 INFO o.a.j.JMeter: Loading system properties from: /Users/snehasishbala/Downloads/apache-jmeter-5.6.3/bin/system.properties
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: Version 5.6.3
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: java.version=17.0.10
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: os.name=Mac OS X
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: os.arch=aarch64
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: os.version=14.6
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: file.encoding=UTF-8
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: java.awt.headless=true
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: Max memory     =1073741824
-2025-07-08 15:54:11,398 INFO o.a.j.JMeter: Available Processors =8
-2025-07-08 15:54:11,401 INFO o.a.j.JMeter: Default Locale=English (EN)
-2025-07-08 15:54:11,401 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
-2025-07-08 15:54:11,402 INFO o.a.j.JMeter: JMeterHome=/Users/snehasishbala/Downloads/apache-jmeter-5.6.3
-2025-07-08 15:54:11,402 INFO o.a.j.JMeter: user.dir  =/Users/snehasishbala/Downloads/tehelka_testing
-2025-07-08 15:54:11,402 INFO o.a.j.JMeter: PWD       =/Users/snehasishbala/Downloads/tehelka_testing
-2025-07-08 15:54:11,403 INFO o.a.j.JMeter: IP: 127.0.0.1 Name: Snehasishs-MacBook-Air.local FullName: localhost
-2025-07-08 15:54:11,409 INFO o.a.j.s.FileServer: Default base='/Users/snehasishbala/Downloads/tehelka_testing'
-2025-07-08 15:54:11,409 INFO o.a.j.s.FileServer: Set new base='/var/folders/7m/gy1tk6c97vjbrbgmjzs16g980000gn/T'
-2025-07-08 15:54:11,478 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
-2025-07-08 15:54:11,489 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
-2025-07-08 15:54:11,490 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
-2025-07-08 15:54:11,491 INFO o.a.j.s.SaveService: Loading file: /var/folders/7m/gy1tk6c97vjbrbgmjzs16g980000gn/T/testplan-11732663976157834949.jmx
-2025-07-08 15:54:11,514 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2025-07-08 15:54:11,514 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2025-07-08 15:54:11,514 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2025-07-08 15:54:11,514 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
-2025-07-08 15:54:11,514 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
-2025-07-08 15:54:11,514 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
-2025-07-08 15:54:11,524 INFO o.a.j.JMeter: Creating summariser <summary>
-2025-07-08 15:54:11,529 INFO o.a.j.e.StandardJMeterEngine: Running the test!
-2025-07-08 15:54:11,529 INFO o.a.j.s.SampleEvent: List of sample_variables: []
-2025-07-08 15:54:11,529 INFO o.a.j.s.SampleEvent: List of sample_variables: []
-2025-07-08 15:54:11,531 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
-2025-07-08 15:54:11,531 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
-2025-07-08 15:54:11,556 INFO o.a.j.JMeter: Running test (1751970251556)
-2025-07-08 15:54:11,565 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : Thread Group
-2025-07-08 15:54:11,565 INFO o.a.j.e.StandardJMeterEngine: Starting 10 threads for group Thread Group.
-2025-07-08 15:54:11,565 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
-2025-07-08 15:54:11,565 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=10 ramp-up=60 delayedStart=false
-2025-07-08 15:54:11,568 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-1
-2025-07-08 15:54:11,569 INFO o.a.j.t.ThreadGroup: Started thread group number 1
-2025-07-08 15:54:11,569 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
-2025-07-08 15:54:11,576 INFO o.a.j.p.h.s.HTTPHCAbstractImpl: Local host = Snehasishs-MacBook-Air.local
-2025-07-08 15:54:11,578 INFO o.a.j.p.h.s.HTTPHC4Impl: HTTP request retry count = 0
-2025-07-08 15:54:11,578 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
-2025-07-08 15:54:11,578 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to UTF-8
-2025-07-08 15:54:11,578 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
-2025-07-08 15:54:11,578 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
-2025-07-08 15:54:11,615 INFO o.a.j.p.h.s.h.LazyLayeredConnectionSocketFactory: Setting up HTTPS TrustAll Socket Factory
-2025-07-08 15:54:11,617 INFO o.a.j.u.JsseSSLManager: Using default SSL protocol: TLS
-2025-07-08 15:54:11,617 INFO o.a.j.u.JsseSSLManager: SSL session context: per-thread
-2025-07-08 15:54:11,651 INFO o.a.j.u.SSLManager: JmeterKeyStore Location:  type JKS
-2025-07-08 15:54:11,652 INFO o.a.j.u.SSLManager: KeyStore created OK
-2025-07-08 15:54:11,652 WARN o.a.j.u.SSLManager: Keystore file not found, loading empty keystore
-2025-07-08 15:54:11,751 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-1
-2025-07-08 15:54:11,751 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-1
-2025-07-08 15:54:17,572 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-2
-2025-07-08 15:54:17,652 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-2
-2025-07-08 15:54:17,652 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-2
-2025-07-08 15:54:23,572 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-3
-2025-07-08 15:54:23,640 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-3
-2025-07-08 15:54:23,640 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-3
-2025-07-08 15:54:29,568 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-4
-2025-07-08 15:54:29,636 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-4
-2025-07-08 15:54:29,636 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-4
-2025-07-08 15:54:35,566 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-5
-2025-07-08 15:54:35,629 INFO o.a.j.r.Summariser: summary +      5 in 00:00:24 =    0.2/s Avg:    82 Min:    58 Max:   146 Err:     0 (0.00%) Active: 1 Started: 5 Finished: 4
-2025-07-08 15:54:35,629 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-5
-2025-07-08 15:54:35,630 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-5
-2025-07-08 15:54:41,566 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-6
-2025-07-08 15:54:41,630 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-6
-2025-07-08 15:54:41,631 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-6
-2025-07-08 15:54:47,571 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-7
-2025-07-08 15:54:47,634 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-7
-2025-07-08 15:54:47,635 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-7
-2025-07-08 15:54:53,569 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-8
-2025-07-08 15:54:53,640 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-8
-2025-07-08 15:54:53,640 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-8
-2025-07-08 15:54:59,570 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-9
-2025-07-08 15:54:59,640 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-9
-2025-07-08 15:54:59,640 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-9
-2025-07-08 15:55:05,571 INFO o.a.j.t.JMeterThread: Thread started: Thread Group 1-10
-2025-07-08 15:55:05,642 INFO o.a.j.r.Summariser: summary +      5 in 00:00:30 =    0.2/s Avg:    64 Min:    61 Max:    67 Err:     0 (0.00%) Active: 1 Started: 10 Finished: 9
-2025-07-08 15:55:05,643 INFO o.a.j.r.Summariser: summary =     10 in 00:00:54 =    0.2/s Avg:    73 Min:    58 Max:   146 Err:     0 (0.00%)
-2025-07-08 15:55:05,644 INFO o.a.j.t.JMeterThread: Thread is done: Thread Group 1-10
-2025-07-08 15:55:05,644 INFO o.a.j.t.JMeterThread: Thread finished: Thread Group 1-10
-2025-07-08 15:55:05,645 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
-2025-07-08 15:55:05,646 INFO o.a.j.r.Summariser: summary =     10 in 00:00:54 =    0.2/s Avg:    73 Min:    58 Max:   146 Err:     0 (0.00%)
+2025-07-09 12:40:46,997 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2025-07-09 12:40:47,007 INFO o.a.j.JMeter: Loading user properties from: /Users/snehasishbala/Downloads/apache-jmeter-5.6.3/bin/user.properties
+2025-07-09 12:40:47,008 INFO o.a.j.JMeter: Loading system properties from: /Users/snehasishbala/Downloads/apache-jmeter-5.6.3/bin/system.properties
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: Version 5.6.3
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: java.version=17.0.10
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: os.name=Mac OS X
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: os.arch=aarch64
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: os.version=14.6
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: file.encoding=UTF-8
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: java.awt.headless=true
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: Max memory     =1073741824
+2025-07-09 12:40:47,010 INFO o.a.j.JMeter: Available Processors =8
+2025-07-09 12:40:47,014 INFO o.a.j.JMeter: Default Locale=English (EN)
+2025-07-09 12:40:47,014 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2025-07-09 12:40:47,014 INFO o.a.j.JMeter: JMeterHome=/Users/snehasishbala/Downloads/apache-jmeter-5.6.3
+2025-07-09 12:40:47,014 INFO o.a.j.JMeter: user.dir  =/Users/snehasishbala/Downloads/tehelka_testing
+2025-07-09 12:40:47,014 INFO o.a.j.JMeter: PWD       =/Users/snehasishbala/Downloads/tehelka_testing
+2025-07-09 12:40:47,015 INFO o.a.j.JMeter: IP: 127.0.0.1 Name: Snehasishs-MacBook-Air.local FullName: localhost
+2025-07-09 12:40:47,021 INFO o.a.j.s.FileServer: Default base='/Users/snehasishbala/Downloads/tehelka_testing'
+2025-07-09 12:40:47,022 INFO o.a.j.s.FileServer: Set new base='/var/folders/7m/gy1tk6c97vjbrbgmjzs16g980000gn/T'
+2025-07-09 12:40:47,087 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
+2025-07-09 12:40:47,099 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
+2025-07-09 12:40:47,100 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
+2025-07-09 12:40:47,101 INFO o.a.j.s.SaveService: Loading file: /var/folders/7m/gy1tk6c97vjbrbgmjzs16g980000gn/T/testplan-12887227831217688509.jmx
+2025-07-09 12:40:47,122 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-09 12:40:47,122 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-09 12:40:47,122 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-09 12:40:47,122 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2025-07-09 12:40:47,122 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
+2025-07-09 12:40:47,122 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
+2025-07-09 12:40:47,144 INFO o.a.j.JMeter: Creating summariser <summary>
+2025-07-09 12:40:47,148 INFO o.a.j.e.StandardJMeterEngine: Running the test!
+2025-07-09 12:40:47,148 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2025-07-09 12:40:47,148 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2025-07-09 12:40:47,150 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
+2025-07-09 12:40:47,150 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
+2025-07-09 12:40:47,175 INFO o.a.j.JMeter: Running test (1752045047175)
+2025-07-09 12:40:47,186 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : Equipment_HDU
+2025-07-09 12:40:47,186 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group Equipment_HDU.
+2025-07-09 12:40:47,186 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2025-07-09 12:40:47,186 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=1 ramp-up=1 delayedStart=false
+2025-07-09 12:40:47,189 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2025-07-09 12:40:47,189 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
+2025-07-09 12:40:47,338 INFO o.a.j.t.JMeterThread: Thread started: Equipment_HDU 1-1
+2025-07-09 12:40:47,339 INFO o.a.j.s.FileServer: Stored: C:/Users/Saumya.nirjai/Downloads/Book 3(Sheet1).csv
+2025-07-09 12:40:47,339 ERROR o.a.j.t.JMeterThread: Test failed!
+java.lang.IllegalArgumentException: File Book 3(Sheet1).csv must exist and be readable
+	at org.apache.jmeter.services.FileServer.createBufferedReader(FileServer.java:424) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.services.FileServer.readLine(FileServer.java:340) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.config.CSVDataSet.iterationStart(CSVDataSet.java:182) ~[ApacheJMeter_components.jar:5.6.3]
+	at org.apache.jmeter.control.GenericController.fireIterationStart(GenericController.java:412) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.control.GenericController.fireIterEvents(GenericController.java:404) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.control.GenericController.next(GenericController.java:170) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.control.LoopController.next(LoopController.java:119) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.threads.AbstractThreadGroup.next(AbstractThreadGroup.java:109) ~[ApacheJMeter_core.jar:5.6.3]
+	at org.apache.jmeter.threads.JMeterThread.run(JMeterThread.java:266) [ApacheJMeter_core.jar:5.6.3]
+	at java.base/java.lang.Thread.run(Thread.java:840) [?:?]
+2025-07-09 12:40:47,342 INFO o.a.j.t.JMeterThread: Thread finished: Equipment_HDU 1-1
+2025-07-09 12:40:47,342 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
+2025-07-09 12:40:47,343 INFO o.a.j.r.Summariser: summary =      0 in 00:00:00 = ******/s Avg:     0 Min: 9223372036854775807 Max: -9223372036854775808 Err:     0 (0.00%)

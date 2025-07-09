@@ -5,6 +5,9 @@ import com.load.Model.RunTest;
 import com.load.Model.Test;
 import com.load.Repository.RunTestRepository;
 import com.load.Repository.TestRepository;
+import com.load.Utils.JtlParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import org.springframework.stereotype.Service;
 import org.w3c.dom.*;
@@ -26,11 +29,13 @@ public class RunTestService {
 
     private final TestRepository testRepository;
     private final RunTestRepository runTestRepository;
+    private final ReportService reportService;
     private final Set<Path> downloadedCsvFiles = new HashSet<>();
 
-    public RunTestService(TestRepository testRepository, RunTestRepository runTestRepository) {
+    public RunTestService(TestRepository testRepository, RunTestRepository runTestRepository, ReportService reportService) {
         this.testRepository = testRepository;
         this.runTestRepository = runTestRepository;
+        this.reportService = reportService;
     }
 
     private boolean isUrl(String path) {
@@ -184,6 +189,29 @@ public class RunTestService {
         runTest.setResultFilePath(resultPath.toAbsolutePath().toString());
         if (exitCode == 0) {
             test.setTestRunStatus(TestRunStatus.COMPLETED);
+            Map<String, Object> jtlData = JtlParser.parseJtl(resultPath);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String summaryJson = objectMapper.writeValueAsString(jtlData.get("summary"));
+        String detailsJson = objectMapper.writeValueAsString(jtlData.get("samples"));
+        String graphsJson = null; 
+
+        String excelReportPath = reportService.generateExcelReport(
+                test.getProject().getId(),
+                runTest.getId(),
+                summaryJson,
+                detailsJson,
+                graphsJson
+            );
+
+            
+        reportService.createReport(
+            test.getProject().getId(),
+            runTest.getId(),
+            summaryJson,
+            detailsJson,
+            graphsJson,
+            null 
+        );
         } else {
             test.setTestRunStatus(TestRunStatus.FAILED);
             runTest.setErrorMessage("JMeter execution failed with exit code " + exitCode);

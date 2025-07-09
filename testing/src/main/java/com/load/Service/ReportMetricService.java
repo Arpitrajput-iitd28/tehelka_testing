@@ -3,9 +3,7 @@ package com.load.Service;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.stereotype.Service;
-
 import com.load.Repository.ReportMetricRepository;
 import com.load.Model.ReportMetric;
 
@@ -48,4 +46,3 @@ public class ReportMetricService {
             .orElseThrow(() -> new RuntimeException("Metric not found with id: " + metricId));
     }
 }
-

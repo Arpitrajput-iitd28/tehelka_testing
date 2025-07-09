@@ -1,53 +1,35 @@
 package com.load.Controller;
 
-import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.load.Service.ReportMetricService;
 import com.load.Model.ReportMetric;
+import com.load.Service.ReportMetricService;
 
 @RestController
-@RequestMapping("/api/reports/{reportId}/metrics")
-
+@RequestMapping("/api/report-metrics")
 public class ReportMetricController {
-
     private final ReportMetricService reportMetricService;
 
+    @Autowired
     public ReportMetricController(ReportMetricService reportMetricService) {
         this.reportMetricService = reportMetricService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<ReportMetric>> getAllMetricsForReport(@PathVariable Long reportId) {
-        return ResponseEntity.ok(reportMetricService.getMetricsForReport(reportId));
+    @GetMapping("/{reportId}")
+    public List<ReportMetric> getMetricsForReport(@PathVariable Long reportId) {
+        return reportMetricService.getMetricsForReport(reportId);
     }
 
-    @GetMapping("/by-label")
-    public ResponseEntity<List<ReportMetric>> getMetricsByLabel(
-            @PathVariable Long reportId,
-            @RequestParam String label) {
-        return ResponseEntity.ok(reportMetricService.getMetricsByLabel(reportId, label));
+    @GetMapping("/{reportId}/by-label")
+    public List<ReportMetric> getMetricsByLabel(@PathVariable Long reportId, @RequestParam String label) {
+        return reportMetricService.getMetricsByLabel(reportId, label);
     }
 
-    @GetMapping("/by-error")
-    public ResponseEntity<List<ReportMetric>> getMetricsByErrorThreshold(
-            @PathVariable Long reportId,
-            @RequestParam double maxErrorPct) {
-        return ResponseEntity.ok(reportMetricService.getMetricsByErrorThreshold(reportId, maxErrorPct));
-    }
-
-    @GetMapping("/summary/average")
-    public ResponseEntity<DoubleSummaryStatistics> getSummaryStatsForAverage(@PathVariable Long reportId) {
-        return reportMetricService.getSummaryStatsForAverage(reportId)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.noContent().build());
-    }
-
-    @GetMapping("/{metricId}")
-    public ResponseEntity<ReportMetric> getMetricById(@PathVariable Long metricId) {
-        return ResponseEntity.ok(reportMetricService.getMetricById(metricId));
+    @GetMapping("/metric/{metricId}")
+    public ReportMetric getMetricById(@PathVariable Long metricId) {
+        return reportMetricService.getMetricById(metricId);
     }
 }

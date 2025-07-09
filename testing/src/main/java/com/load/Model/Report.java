@@ -36,7 +36,7 @@ public class Report {
     @Column(name = "graphs_json", columnDefinition = "TEXT")
     private String graphsJson; // Stores graph data (series, pie chart, etc.) as JSON
 
-    @Column(name = "html_report_path")
-    private String htmlReportPath; // Path to generated HTML report (if any)
+    @Lob
+    @Column(name = "html_report_content")
+    private String htmlReportContent;
 }
-
