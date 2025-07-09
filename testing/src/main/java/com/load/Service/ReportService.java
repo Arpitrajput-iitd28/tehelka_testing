@@ -101,30 +101,37 @@ public class ReportService {
         }
 
         // 3. Graphs Sheet (example: error % pie chart)
+        // Only create the chart if there is at least one data row
         Sheet graphSheet = workbook.createSheet("Graphs");
-        XSSFDrawing drawing = (XSSFDrawing) graphSheet.createDrawingPatriarch();
-        XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 0, 5, 10, 20);
-        XSSFChart chart = drawing.createChart(anchor);
+        if (rowNum > 1) {
+            XSSFDrawing drawing = (XSSFDrawing) graphSheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 0, 5, 10, 20);
+            XSSFChart chart = drawing.createChart(anchor);
 
-        // Set chart title
-        chart.setTitleText("Error Percentage by Label");
-        chart.setTitleOverlay(false);
+            // Set chart title
+            chart.setTitleText("Error Percentage by Label");
+            chart.setTitleOverlay(false);
 
-        // Create legend
-        XDDFChartLegend legend = chart.getOrAddLegend();
-        legend.setPosition(LegendPosition.RIGHT);
+            // Create legend
+            XDDFChartLegend legend = chart.getOrAddLegend();
+            legend.setPosition(LegendPosition.RIGHT);
 
-        // Create data sources using XDDF
-        XDDFDataSource<String> labels = XDDFDataSourcesFactory.fromStringCellRange(metricsSheet,
-                new CellRangeAddress(1, rowNum - 1, 0, 0));
-        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(metricsSheet,
-                new CellRangeAddress(1, rowNum - 1, 6, 6));
+            // Create data sources using XDDF
+            XDDFDataSource<String> labels = XDDFDataSourcesFactory.fromStringCellRange(metricsSheet,
+                    new CellRangeAddress(1, rowNum - 1, 0, 0));
+            XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(metricsSheet,
+                    new CellRangeAddress(1, rowNum - 1, 6, 6));
 
-        // Create pie chart data using the new XDDF method
-        XDDFChartData data = chart.createData(ChartTypes.PIE, null, null);
-        data.setVaryColors(true);
-        data.addSeries(labels, values);
-        chart.plot(data);
+            // Create pie chart data using the new XDDF method
+            XDDFChartData data = chart.createData(ChartTypes.PIE, null, null);
+            data.setVaryColors(true);
+            data.addSeries(labels, values);
+            chart.plot(data);
+        } else {
+            // Optionally, you can log or add a note to the sheet:
+            Row noteRow = graphSheet.createRow(0);
+            noteRow.createCell(0).setCellValue("No data available for chart.");
+        }
 
         // Save Excel file to temp directory
         Path tempFile = Files.createTempFile("jmeter-report-", ".xlsx");

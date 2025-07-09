@@ -159,7 +159,7 @@ public class RunTestService {
         updateJmxWithConfigAndCsv(tempJmxPath.toFile(), test);
 
         Path resultPath = Files.createTempFile("jmeter-result-", ".jtl");
-
+        System.out.println("JTL file path: " + resultPath.toAbsolutePath());
         List<String> command = new ArrayList<>();
         command.add("/Users/snehasishbala/Downloads/apache-jmeter-5.6.3/bin/jmeter");
         command.add("-n");
@@ -167,6 +167,9 @@ public class RunTestService {
         command.add(tempJmxPath.toAbsolutePath().toString());
         command.add("-l");
         command.add(resultPath.toAbsolutePath().toString());
+        command.add("-f");
+        command.add("-Jjmeter.save.saveservice.print_field_names=true");
+
 
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
@@ -203,14 +206,14 @@ public class RunTestService {
                 graphsJson
             );
 
-            
+
         reportService.createReport(
             test.getProject().getId(),
             runTest.getId(),
             summaryJson,
             detailsJson,
             graphsJson,
-            null 
+            excelReportPath
         );
         } else {
             test.setTestRunStatus(TestRunStatus.FAILED);
