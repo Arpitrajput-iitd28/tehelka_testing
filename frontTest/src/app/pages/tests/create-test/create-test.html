@@ -8,7 +8,7 @@
       </div>
       <div class="header-actions">
         <button class="btn-secondary" routerLink="/tests">
-          <i class="fas fa-arrow-left"></i>
+          <img src = "back.png" alt="Back" width="20" height="20">
           Back to Tests
         </button>
       </div>
@@ -74,36 +74,193 @@
           </div>
         </div>
 
-        <!-- Test Configuration Section -->
+        <!-- Thread Group Configuration Section -->
         <div class="form-section">
-          <h2>Test Configuration</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="testType">Test Type *</label>
-              <select 
-                id="testType"
-                formControlName="testType"
-                class="form-select"
-                (change)="onTestTypeChange()">
-                <option value="load">Load Test</option>
-                <option value="stress">Stress Test</option>
-                <option value="spike">Spike Test</option>
-                <option value="volume">Volume Test</option>
-              </select>
+          <h2>Thread Group Configuration</h2>
+          
+          <!-- Thread Group Type Selection -->
+          <div class="thread-type-selection">
+            <div class="thread-type-option">
+              <input 
+                type="radio" 
+                id="standardThread" 
+                name="threadType" 
+                value="standard"
+                [checked]="selectedThreadType === 'standard'"
+                (change)="onThreadTypeChange('standard')">
+              <label for="standardThread">Standard Thread Group</label>
+            </div>
+            <div class="thread-type-option">
+              <input 
+                type="radio" 
+                id="ultimateThread" 
+                name="threadType" 
+                value="ultimate"
+                [checked]="selectedThreadType === 'ultimate'"
+                (change)="onThreadTypeChange('ultimate')">
+              <label for="ultimateThread">Ultimate Thread Group</label>
+            </div>
+          </div>
+
+          <!-- Standard Thread Group Configuration -->
+          <div *ngIf="selectedThreadType === 'standard'" class="thread-config standard-config">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="numUsers">Number of Threads (users) *</label>
+                <input 
+                  type="number" 
+                  id="numUsers"
+                  formControlName="numUsers"
+                  class="form-input"
+                  [class.error]="isFieldInvalid('numUsers')"
+                  min="1"
+                  placeholder="10">
+                <div *ngIf="isFieldInvalid('numUsers')" class="error-message">
+                  {{ getFieldError('numUsers') }}
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="rampUpPeriod">Ramp-up Period (seconds) *</label>
+                <input 
+                  type="number" 
+                  id="rampUpPeriod"
+                  formControlName="rampUpPeriod"
+                  class="form-input"
+                  [class.error]="isFieldInvalid('rampUpPeriod')"
+                  min="1"
+                  placeholder="5">
+                <div *ngIf="isFieldInvalid('rampUpPeriod')" class="error-message">
+                  {{ getFieldError('rampUpPeriod') }}
+                </div>
+              </div>
             </div>
             
-            <div class="form-group">
-              <label for="loop">Loop Count *</label>
-              <input 
-                type="number" 
-                id="loop"
-                formControlName="loop"
-                class="form-input"
-                [class.error]="isFieldInvalid('loop')"
-                min="1"
-                placeholder="1">
-              <div *ngIf="isFieldInvalid('loop')" class="error-message">
-                {{ getFieldError('loop') }}
+            <div class="form-row">
+              <div class="form-group">
+                <label for="testDuration">Test Duration (seconds) *</label>
+                <input 
+                  type="number" 
+                  id="testDuration"
+                  formControlName="testDuration"
+                  class="form-input"
+                  [class.error]="isFieldInvalid('testDuration')"
+                  min="1"
+                  placeholder="60">
+                <div *ngIf="isFieldInvalid('testDuration')" class="error-message">
+                  {{ getFieldError('testDuration') }}
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="loop">Loop Count *</label>
+                <input 
+                  type="number" 
+                  id="loop"
+                  formControlName="loop"
+                  class="form-input"
+                  [class.error]="isFieldInvalid('loop')"
+                  min="1"
+                  placeholder="1">
+                <div *ngIf="isFieldInvalid('loop')" class="error-message">
+                  {{ getFieldError('loop') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ultimate Thread Group Configuration -->
+          <div *ngIf="selectedThreadType === 'ultimate'" class="thread-config ultimate-config">
+            <div class="ultimate-thread-header">
+              <h3>Ultimate Thread Group Schedule</h3>
+              <button type="button" class="btn-add-row" (click)="addThreadScheduleRow()">
+                <i class="fas fa-plus"></i>
+                Add Row
+              </button>
+            </div>
+            
+            <div class="ultimate-thread-table">
+              <table class="thread-schedule-table">
+                <thead>
+                  <tr>
+                    <th>Start Threads Count</th>
+                    <th>Initial Delay (sec)</th>
+                    <th>Startup Time (sec)</th>
+                    <th>Hold Load For (sec)</th>
+                    <th>Shutdown Time (sec)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of threadScheduleRows; let i = index; trackBy: trackByIndex" class="schedule-row">
+                    <td>
+                      <input 
+                        type="number" 
+                        class="table-input"
+                        [(ngModel)]="row.startThreadsCount"
+                        [ngModelOptions]="{standalone: true}"
+                        min="0"
+                        placeholder="10">
+                    </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        class="table-input"
+                        [(ngModel)]="row.initialDelay"
+                        [ngModelOptions]="{standalone: true}"
+                        min="0"
+                        placeholder="40">
+                    </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        class="table-input"
+                        [(ngModel)]="row.startupTime"
+                        [ngModelOptions]="{standalone: true}"
+                        min="1"
+                        placeholder="5050">
+                    </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        class="table-input"
+                        [(ngModel)]="row.holdLoadFor"
+                        [ngModelOptions]="{standalone: true}"
+                        min="1"
+                        placeholder="10">
+                    </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        class="table-input"
+                        [(ngModel)]="row.shutdownTime"
+                        [ngModelOptions]="{standalone: true}"
+                        min="1"
+                        placeholder="10">
+                    </td>
+                    <td>
+                      <div class="table-actions">
+                        <button type="button" class="btn-table-action btn-copy" (click)="copyRow(i)" title="Copy Row">
+                          <i class="fas fa-copy"></i>
+                        </button>
+                        <button type="button" class="btn-table-action btn-delete" (click)="deleteRow(i)" title="Delete Row" [disabled]="threadScheduleRows.length <= 1">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="ultimate-thread-summary">
+              <div class="summary-item">
+                <span class="summary-label">Expected parallel users count:</span>
+                <span class="summary-value">{{ getExpectedParallelUsers() }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Total test duration:</span>
+                <span class="summary-value">{{ getTotalTestDuration() }}s</span>
               </div>
             </div>
           </div>
@@ -141,98 +298,6 @@
             <div class="file-requirement">
               <i class="fas fa-info-circle"></i>
               <span>JMX file is required for test execution. PDF files are for documentation only.</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Timing Configuration Section -->
-        <div class="form-section">
-          <h2>Timing Configuration</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="startdelay">Start Delay (seconds)</label>
-              <input 
-                type="number" 
-                id="startdelay"
-                formControlName="startdelay"
-                class="form-input"
-                min="0"
-                placeholder="0">
-            </div>
-            
-            <div class="form-group">
-              <label for="startupTime">Startup Time (seconds) *</label>
-              <input 
-                type="number" 
-                id="startupTime"
-                formControlName="startupTime"
-                class="form-input"
-                [class.error]="isFieldInvalid('startupTime')"
-                min="1"
-                placeholder="5">
-              <div *ngIf="isFieldInvalid('startupTime')" class="error-message">
-                {{ getFieldError('startupTime') }}
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="holdLoadFor">Hold Load For (seconds) *</label>
-              <input 
-                type="number" 
-                id="holdLoadFor"
-                formControlName="holdLoadFor"
-                class="form-input"
-                [class.error]="isFieldInvalid('holdLoadFor')"
-                min="1"
-                placeholder="30">
-              <div *ngIf="isFieldInvalid('holdLoadFor')" class="error-message">
-                {{ getFieldError('holdLoadFor') }}
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="shutdownTime">Shutdown Time (seconds) *</label>
-              <input 
-                type="number" 
-                id="shutdownTime"
-                formControlName="shutdownTime"
-                class="form-input"
-                [class.error]="isFieldInvalid('shutdownTime')"
-                min="1"
-                placeholder="5">
-              <div *ngIf="isFieldInvalid('shutdownTime')" class="error-message">
-                {{ getFieldError('shutdownTime') }}
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="startThreadCount">Start Thread Count *</label>
-              <input 
-                type="number" 
-                id="startThreadCount"
-                formControlName="startThreadCount"
-                class="form-input"
-                [class.error]="isFieldInvalid('startThreadCount')"
-                min="1"
-                placeholder="2">
-              <div *ngIf="isFieldInvalid('startThreadCount')" class="error-message">
-                {{ getFieldError('startThreadCount') }}
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="initialDelay">Initial Delay (seconds)</label>
-              <input 
-                type="number" 
-                id="initialDelay"
-                formControlName="initialDelay"
-                class="form-input"
-                min="0"
-                placeholder="0">
             </div>
           </div>
         </div>

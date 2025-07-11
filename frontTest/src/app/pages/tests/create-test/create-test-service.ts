@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment.development';
 import { AuthService } from '../../../services/auth';
+import { ThreadScheduleRow } from './create-test';
 
 export interface TestRequest {
   testName: string;
@@ -22,6 +23,8 @@ export interface TestRequest {
   startThreadCount: number;
   initialDelay: number;
   scheduledExecutionTime?: string;
+  threadType?: 'STANDARD' | 'ULTIMATE';
+  threadSchedule?: ThreadScheduleRow[];
 }
 
 export interface TestResponse {
