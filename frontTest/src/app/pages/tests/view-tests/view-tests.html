@@ -268,7 +268,7 @@
             <h3>No Tests Found</h3>
             <p>{{searchQuery || statusFilter || projectFilter || typeFilter ? 'No tests match your current filters.' : 'You haven\'t created any tests yet.'}}</p>
             <button class="btn-primary" routerLink="/tests/create">
-              <i class="fas fa-plus"></i>
+              <img src = "plus.webp" alt="Create" width="20" height="20" />
               Create Your First Test
             </button>
           </div>
@@ -283,10 +283,10 @@
           
           <div class="pagination-controls">
             <button (click)="goToPage(currentPage - 1)" 
-                    [disabled]="currentPage === 1" 
-                    class="btn-pagination">
-              <i class="fas fa-chevron-left"></i>
-            </button>
+                  [disabled]="currentPage === 1" 
+                  class="btn-pagination">
+            <img src="previous.png" alt="Previous" class="pagination-icon" />
+          </button>
             
             <span class="page-numbers">
               <button *ngFor="let page of getPageNumbers()" 

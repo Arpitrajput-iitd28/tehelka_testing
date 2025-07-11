@@ -981,3 +981,9 @@
   width: 25px;
   height: 25px;
 }
+
+.pagination-icon{
+  width: 15px;
+  height: 15px;
+  padding-top: 2px;
+}
