@@ -1,0 +1,268 @@
+<app-layout>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    <div class="loading-text">Loading project details...</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="project-details-wrapper" *ngIf="!isLoading">
+    <div class="project-details-container">
+      
+      <!-- Project Header with Fixed Layout -->
+      <header class="project-header">
+        <div class="header-main">
+          <div class="project-title-section">
+            <h1 class="project-title">{{ projectDetails?.name || 'Project Details' }}</h1>
+            <div class="project-metadata" *ngIf="projectDetails">
+              <div class="meta-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Created {{ formatDate(projectDetails.createdAt) | date:'MMM d, y' }}</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>{{ getProjectAge() }}</span>
+              </div>
+              <div class="meta-item">
+                <i class="fas fa-hashtag"></i>
+                <span>ID: {{ projectDetails.id }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="header-actions">
+            <div class="action-buttons-row">
+              <button class="btn btn-outline" (click)="refreshProjectDetails()" [disabled]="isRefreshing">
+                <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+                <span>{{ isRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
+              </button>
+              <button class="btn btn-outline" (click)="exportProjectData()">
+                <i class="fas fa-download"></i>
+                <span>Export</span>
+              </button>
+              <button class="btn btn-primary" (click)="createNewTest()">
+                <i class="fas fa-plus"></i>
+                <span>New Test</span>
+              </button>
+              <a href="/projects" class="btn btn-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Projects</span>
+              </a>
+              <button class="btn btn-danger" (click)="deleteProject()" [disabled]="isDeleting">
+                <i class="fas fa-trash-alt" [class.fa-spin]="isDeleting"></i>
+                <span>{{ isDeleting ? 'Deleting...' : 'Delete Project' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Enhanced JMeter Statistics Dashboard -->
+      <section class="stats-dashboard" *ngIf="projectDetails">
+        <div class="stats-grid">
+          <div class="stat-card primary">
+            <div class="stat-icon">
+              <i class="fas fa-vial"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getTestsCount() }}</div>
+              <div class="stat-label">Total Tests</div>
+            </div>
+          </div>
+          
+          <div class="stat-card success">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getCompletedTestsCount() }}</div>
+              <div class="stat-label">Completed</div>
+            </div>
+          </div>
+          
+          <div class="stat-card info">
+            <div class="stat-icon">
+              <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getRunningTestsCount() }}</div>
+              <div class="stat-label">Running</div>
+            </div>
+          </div>
+          
+          <div class="stat-card warning">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getScheduledTestsCount() }}</div>
+              <div class="stat-label">Scheduled</div>
+            </div>
+          </div>
+          
+          <div class="stat-card danger">
+            <div class="stat-icon">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getFailedTestsCount() }}</div>
+              <div class="stat-label">Failed</div>
+            </div>
+          </div>
+          
+          <!-- JMeter-specific stats -->
+          <div class="stat-card jmeter">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getTotalVirtualUsers() }}</div>
+              <div class="stat-label">Total Virtual Users</div>
+            </div>
+          </div>
+          
+          <div class="stat-card performance">
+            <div class="stat-icon">
+              <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getAverageTestDuration() }}s</div>
+              <div class="stat-label">Avg Test Duration</div>
+            </div>
+          </div>
+          
+          <div class="stat-card load">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ getMaxConcurrentUsers() }}</div>
+              <div class="stat-label">Max Concurrent Users</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Compact Tests Section -->
+      <section class="tests-section">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <h2>Load Tests</h2>
+              <span class="test-counter">{{ filteredTests.length }} test{{ filteredTests.length !== 1 ? 's' : '' }}</span>
+            </div>
+          </div>
+
+          <!-- Compact Search and Filters -->
+          <div class="filters-bar-compact">
+            <div class="search-container-compact">
+              <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input 
+                  type="text" 
+                  class="search-input-compact"
+                  placeholder="Search tests..." 
+                  [(ngModel)]="searchQuery" 
+                  (input)="onSearch()">
+                <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''; onSearch()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="filter-controls-compact">
+              <select class="status-filter-compact" [(ngModel)]="statusFilter" (change)="onFilterChange()">
+                <option value="">All Statuses</option>
+                <option value="RUNNING">Running</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="FAILED">Failed</option>
+                <option value="SCHEDULED">Scheduled</option>
+              </select>
+              
+              <button class="btn btn-outline btn-xs" (click)="clearFilters()" *ngIf="searchQuery || statusFilter">
+                <i class="fas fa-times"></i>
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Compact Tests Cards Grid -->
+          <div class="tests-grid" *ngIf="filteredTests.length > 0">
+            <div *ngFor="let test of filteredTests; trackBy: trackByTestId" class="test-card">
+              <div class="test-card-header">
+                <div class="test-name">{{ test.testName }}</div>
+                <span class="status-badge-compact" [ngClass]="getStatusClass(test.testRunStatus)">
+                  <i class="status-icon" [ngClass]="getStatusIcon(test.testRunStatus)"></i>
+                  {{ getStatusDisplayText(test.testRunStatus) }}
+                </span>
+              </div>
+              
+              <div class="test-card-body">
+                <div class="test-metrics">
+                  <div class="metric">
+                    <i class="fas fa-users"></i>
+                    <span>{{ test.numUsers || 0 }} users</span>
+                  </div>
+                  <div class="metric">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ test.testDuration || 0 }}s</span>
+                  </div>
+                  <div class="metric">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>{{ test.rampUpPeriod || 0 }}s ramp</span>
+                  </div>
+                  <div class="metric">
+                    <i class="fas fa-repeat"></i>
+                    <span>{{ test.loop || 1 }} loops</span>
+                  </div>
+                </div>
+                
+                <div class="test-meta-compact">
+                  <span class="test-id">ID: {{ test.id }}</span>
+                  <span class="test-date">{{ formatDate(test.createdAt) | date:'MMM d' }}</span>
+                </div>
+              </div>
+              
+              <div class="test-card-actions">
+                <button class="btn-icon-compact btn-view" (click)="viewTest(test.id)" title="View Test Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon-compact btn-play" *ngIf="test.testRunStatus === 'SCHEDULED'" title="Run Test">
+                  <i class="fas fa-play"></i>
+                </button>
+                <button class="btn-icon-compact btn-stop" *ngIf="test.testRunStatus === 'RUNNING'" title="Stop Test">
+                  <i class="fas fa-stop"></i>
+                </button>
+                <button class="btn-icon-compact btn-results" *ngIf="test.testRunStatus === 'COMPLETED'" title="View Results">
+                  <i class="fas fa-chart-bar"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state-compact" *ngIf="filteredTests.length === 0">
+            <div class="empty-illustration">
+              <i class="fas fa-flask"></i>
+            </div>
+            <div class="empty-content">
+              <h3 class="empty-title">
+                {{ searchQuery || statusFilter ? 'No tests found' : 'No load tests created yet' }}
+              </h3>
+              <p class="empty-description">
+                {{ searchQuery || statusFilter ? 'Try adjusting your search criteria.' : 'Create your first JMeter load test to get started.' }}
+              </p>
+              <button class="btn btn-primary" (click)="createNewTest()" *ngIf="!searchQuery && !statusFilter">
+                <i class="fas fa-plus"></i>
+                <span>Create First Load Test</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</app-layout>

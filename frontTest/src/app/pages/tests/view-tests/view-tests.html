@@ -7,6 +7,10 @@
         <p>Monitor and manage all your performance tests</p>
       </div>
       <div class="header-actions">
+        <button class="btn-refresh" (click)="refreshTests()" [disabled]="isRefreshing">
+          <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+          <span>{{ isRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
+        </button>
         <button class="btn-primary" routerLink="/tests/create">
           <i class="fas fa-plus"></i>
           Create New Test
@@ -14,16 +18,31 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-      <div class="loading-spinner">
-        <i class="fas fa-spinner fa-spin"></i>
-        <p>Loading tests...</p>
+    <!-- Initial Loading State (ONLY on first load, NOT on refresh) -->
+    <div *ngIf="isLoading && !isRefreshing" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner">
+          <div class="spinner-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+        <div class="loading-text">
+          <h3>Loading Tests...</h3>
+          <p>Fetching test data from all projects</p>
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Main Content (when not loading) -->
-    <div *ngIf="!isLoading">
+    <!-- Main Content (always visible after initial load) -->
+    <div *ngIf="!isLoading || isRefreshing" class="main-content">
       <!-- Filters and Search -->
       <div class="filters-section">
         <div class="search-filter">
@@ -107,12 +126,8 @@
       <!-- Tests Table -->
       <div class="tests-table-container">
         <div class="table-header">
-          <h2>Test Results</h2>
+          <h2>All Tests</h2>
           <div class="table-actions">
-            <button class="btn-secondary" (click)="refreshTests()">
-              <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
-              Refresh
-            </button>
             <button class="btn-outline" (click)="exportTests()">
               <i class="fas fa-download"></i>
               Export JSON
@@ -124,10 +139,23 @@
           </div>
         </div>
         
-        <div class="table-wrapper">
+        <!-- Table Refresh Loading State (ONLY for refresh operations) -->
+        <div *ngIf="isRefreshing" class="table-loading">
+          <div class="table-loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Refreshing test data...</span>
+          </div>
+        </div>
+        
+        <div class="table-wrapper" [class.refreshing]="isRefreshing">
           <table class="tests-table">
             <thead>
               <tr>
+                <th (click)="sortBy('createdAt')" class="sortable">
+                  Created At
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'createdAt' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortField === 'createdAt' && sortDirection === 'desc'"></i>
+                </th>
                 <th (click)="sortBy('testName')" class="sortable">
                   Test Name
                   <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'testName' && sortDirection === 'asc'"
@@ -138,28 +166,19 @@
                   <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'project' && sortDirection === 'asc'"
                      [class.fa-sort-down]="sortField === 'project' && sortDirection === 'desc'"></i>
                 </th>
-                <th>Action</th>
                 <th>Type</th>
                 <th (click)="sortBy('status')" class="sortable">
                   Status
                   <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'status' && sortDirection === 'asc'"
                      [class.fa-sort-down]="sortField === 'status' && sortDirection === 'desc'"></i>
                 </th>
-                <th (click)="sortBy('createdAt')" class="sortable">
-                  Created At
-                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'createdAt' && sortDirection === 'asc'"
-                     [class.fa-sort-down]="sortField === 'createdAt' && sortDirection === 'desc'"></i>
-                </th>
-                <th>Virtual Users</th>
-                <th>Ramp Up</th>
-                <th>Duration</th>
-                <th>Scheduled</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let test of paginatedTests; trackBy: trackByTestId" 
                   [class]="getStatusClass(test.status)">
+                <td>{{formatDate(test.createdAt) | date:'MMM d, y h:mm a'}}</td>
                 <td>
                   <div class="test-name">
                     <strong>{{test.testName}}</strong>
@@ -169,9 +188,6 @@
                 </td>
                 <td>
                   <span class="project-badge">{{test.project.name}}</span>
-                </td>
-                <td>
-                  <span class="action-badge">{{test.action}}</span>
                 </td>
                 <td>
                   <span class="type-badge" [class]="getTypeClass(test.type)">{{test.type | titlecase}}</span>
@@ -186,67 +202,60 @@
                     {{test.status}}
                   </span>
                 </td>
-                <td>{{formatDate(test.createdAt) | date:'medium'}}</td>
-                <td>{{test.numUsers | number}}</td>
-                <td>{{test.rampUpPeriod}}s</td>
-                <td>{{test.duration}}</td>
-                <td>
-                  <span *ngIf="test.scheduled" class="scheduled-badge">
-                    <i class="fas fa-clock"></i>
-                    {{test.scheduledExecutionTime ? (formatDate(test.scheduledExecutionTime) | date:'short') : 'Yes'}}
-                  </span>
-                  <span *ngIf="!test.scheduled" class="not-scheduled">
-                    <i class="fas fa-times"></i>
-                    No
-                  </span>
-                </td>
                 <td>
                   <div class="action-buttons">
                     <button *ngIf="isTestCompleted(test)" 
                             (click)="viewReport(test.id)" 
                             class="btn-action btn-view" 
-                            title="View Report">
-                      <img src="view.png" alt="View Report" class="action-icon">
+                            title="View Report"
+                            aria-label="View Report">
+                      <i class="fas fa-eye"></i>
                     </button>
                     
                     <button *ngIf="canStopTest(test)" 
                             (click)="stopTest(test.id)" 
                             class="btn-action btn-stop" 
-                            title="Stop Test">
-                      <img src="stop-test.png" alt="Stop Test" class="action-icon">
+                            title="Stop Test"
+                            aria-label="Stop Test">
+                      <i class="fas fa-stop"></i>
                     </button>
                     
                     <button *ngIf="canCancelTest(test)" 
                             (click)="cancelTest(test.id)" 
                             class="btn-action btn-cancel" 
-                            title="Cancel Test">
-                      <img src="cancel-test.png" alt="Cancel Test" class="action-icon">
+                            title="Cancel Test"
+                            aria-label="Cancel Test">
+                      <i class="fas fa-ban"></i>
                     </button>
                     
                     <button *ngIf="test.status === 'DRAFT'" 
                             (click)="editTest(test.id)" 
                             class="btn-action btn-edit" 
-                            title="Edit Test">
-                      <img src="edit-test.png" alt="Edit Test" class="action-icon">
+                            title="Edit Test"
+                            aria-label="Edit Test">
+                      <i class="fas fa-edit"></i>
                     </button>
                     
                     <button *ngIf="canRetryTest(test)" 
                             (click)="retryTest(test.id)" 
                             class="btn-action btn-retry" 
-                            title="Retry Test">
-                      <img src="retry-test.png" alt="Retry Test" class="action-icon">
+                            title="Retry Test"
+                            aria-label="Retry Test">
+                      <i class="fas fa-redo"></i>
                     </button>
                     
                     <button (click)="duplicateTest(test.id)" 
                             class="btn-action btn-duplicate" 
-                            title="Duplicate Test">
-                      <img src="copy.png" alt="Duplicate Test" class="action-icon">
+                            title="Duplicate Test"
+                            aria-label="Duplicate Test">
+                      <i class="fas fa-copy"></i>
                     </button>
-                    
+                  
                     <button (click)="deleteTest(test.id)" 
                             class="btn-action btn-delete" 
-                            title="Delete Test">
-                      <img src="trash.png" alt="Delete Test" class="action-icon">
+                            title="Delete Test"
+                            aria-label="Delete Test">
+                      <i class="fas fa-trash"></i>
                     </button>
                   </div>
                 </td>
@@ -255,8 +264,10 @@
           </table>
           
           <!-- Empty State -->
-          <div *ngIf="filteredTests.length === 0 && !isLoading" class="empty-state">
-            <i class="fas fa-vial"></i>
+          <div *ngIf="filteredTests.length === 0 && !isLoading && !isRefreshing" class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-vial"></i>
+            </div>
             <h3>No Tests Found</h3>
             <p>{{searchQuery || statusFilter || projectFilter || typeFilter ? 'No tests match your current filters.' : 'You haven\'t created any tests yet.'}}</p>
             <button class="btn-primary" routerLink="/tests/create">

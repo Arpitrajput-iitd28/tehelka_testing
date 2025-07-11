@@ -1,9 +1,9 @@
 <app-layout pageTitle="Create Test">
   <div class="create-test-container">
-    <!-- Header Section -->
+    <!-- Page Header -->
     <div class="page-header">
       <div class="header-content">
-        <h1>Create New Load Test</h1>
+        <h1>Create New Test</h1>
         <p>Configure and launch a new performance test for your application</p>
       </div>
       <div class="header-actions">
@@ -14,7 +14,7 @@
       </div>
     </div>
 
-    <!-- Loading Projects State -->
+    <!-- Loading State for Projects -->
     <div *ngIf="isLoadingProjects" class="loading-state">
       <div class="loading-spinner">
         <i class="fas fa-spinner fa-spin"></i>
@@ -22,52 +22,69 @@
       </div>
     </div>
 
-    <!-- Test Configuration Form -->
+    <!-- Main Form -->
     <div *ngIf="!isLoadingProjects" class="form-container">
       <form [formGroup]="createTestForm" (ngSubmit)="createTest()" class="test-form">
         
-        <!-- Basic Information -->
+        <!-- Basic Information Section -->
         <div class="form-section">
           <h2>Basic Information</h2>
           <div class="form-row">
             <div class="form-group">
               <label for="testName">Test Name *</label>
-              <input type="text" id="testName" formControlName="testName" 
-                     placeholder="Enter test name" class="form-input">
-              <div *ngIf="createTestForm.get('testName')?.invalid && createTestForm.get('testName')?.touched" 
-                   class="error-message">
-                Test name is required
+              <input 
+                type="text" 
+                id="testName"
+                formControlName="testName"
+                class="form-input"
+                [class.error]="isFieldInvalid('testName')"
+                placeholder="Enter test name">
+              <div *ngIf="isFieldInvalid('testName')" class="error-message">
+                {{ getFieldError('testName') }}
               </div>
             </div>
             
             <div class="form-group">
               <label for="projectId">Project *</label>
-              <select id="projectId" formControlName="projectId" (change)="onProjectChange()" class="form-select">
+              <select 
+                id="projectId"
+                formControlName="projectId"
+                class="form-select"
+                [class.error]="isFieldInvalid('projectId')"
+                (change)="onProjectChange()">
                 <option value="">Select a project</option>
-                <option *ngFor="let project of projects" [value]="project.id">{{project.name}}</option>
+                <option *ngFor="let project of projects" [value]="project.id">
+                  {{ project.name }}
+                </option>
               </select>
-              <div *ngIf="createTestForm.get('projectId')?.invalid && createTestForm.get('projectId')?.touched" 
-                   class="error-message">
-                Please select a project
+              <div *ngIf="isFieldInvalid('projectId')" class="error-message">
+                {{ getFieldError('projectId') }}
               </div>
             </div>
           </div>
           
           <div class="form-group">
             <label for="comments">Comments</label>
-            <textarea id="comments" formControlName="comments" 
-                      placeholder="Describe what this test will validate" 
-                      class="form-textarea" rows="3"></textarea>
+            <textarea 
+              id="comments"
+              formControlName="comments"
+              class="form-textarea"
+              placeholder="Optional test description or notes"
+              rows="3"></textarea>
           </div>
         </div>
 
-        <!-- Test Configuration -->
+        <!-- Test Configuration Section -->
         <div class="form-section">
           <h2>Test Configuration</h2>
           <div class="form-row">
             <div class="form-group">
               <label for="testType">Test Type *</label>
-              <select id="testType" formControlName="testType" (change)="onTestTypeChange()" class="form-select">
+              <select 
+                id="testType"
+                formControlName="testType"
+                class="form-select"
+                (change)="onTestTypeChange()">
                 <option value="load">Load Test</option>
                 <option value="stress">Stress Test</option>
                 <option value="spike">Spike Test</option>
@@ -76,158 +93,198 @@
             </div>
             
             <div class="form-group">
-              <label for="action">Action</label>
-              <input type="text" id="action" formControlName="action" 
-                     placeholder="Test action description" class="form-input" readonly>
+              <label for="loop">Loop Count *</label>
+              <input 
+                type="number" 
+                id="loop"
+                formControlName="loop"
+                class="form-input"
+                [class.error]="isFieldInvalid('loop')"
+                min="1"
+                placeholder="1">
+              <div *ngIf="isFieldInvalid('loop')" class="error-message">
+                {{ getFieldError('loop') }}
+              </div>
             </div>
           </div>
+        </div>
 
+        <!-- JMeter Script Section -->
+        <div class="form-section">
+          <h2>JMeter Script</h2>
+          
+          <!-- File Upload -->
+          <div class="file-upload-section">
+            <div class="file-upload-area" 
+                 (click)="fileInput.click()"
+                 (dragover)="onDragOver($event)"
+                 (drop)="onDrop($event)">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>Click to upload or drag and drop</p>
+              <small>JMX or PDF files (Max 10MB)</small>
+            </div>
+            
+            <input #fileInput 
+                   type="file" 
+                   accept=".jmx,.pdf"
+                   (change)="onFileSelected($event)"
+                   style="display: none;">
+            
+            <div *ngIf="selectedFile" class="selected-file">
+              <i class="fas fa-file-alt"></i>
+              <span>{{ selectedFile.name }}</span>
+              <button type="button" class="remove-file-btn" (click)="removeFile()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div class="file-requirement">
+              <i class="fas fa-info-circle"></i>
+              <span>JMX file is required for test execution. PDF files are for documentation only.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timing Configuration Section -->
+        <div class="form-section">
+          <h2>Timing Configuration</h2>
           <div class="form-row">
             <div class="form-group">
-              <label for="thread">Thread Group</label>
-              <input type="text" id="thread" formControlName="thread" 
-                     placeholder="Thread Group" class="form-input">
+              <label for="startdelay">Start Delay (seconds)</label>
+              <input 
+                type="number" 
+                id="startdelay"
+                formControlName="startdelay"
+                class="form-input"
+                min="0"
+                placeholder="0">
             </div>
             
             <div class="form-group">
-              <label for="virtualUsers">Virtual Users *</label>
-              <input type="number" id="virtualUsers" formControlName="virtualUsers" 
-                     placeholder="Number of concurrent users" class="form-input" min="1" max="10000">
+              <label for="startupTime">Startup Time (seconds) *</label>
+              <input 
+                type="number" 
+                id="startupTime"
+                formControlName="startupTime"
+                class="form-input"
+                [class.error]="isFieldInvalid('startupTime')"
+                min="1"
+                placeholder="5">
+              <div *ngIf="isFieldInvalid('startupTime')" class="error-message">
+                {{ getFieldError('startupTime') }}
+              </div>
             </div>
           </div>
           
           <div class="form-row">
             <div class="form-group">
-              <label for="duration">Duration (minutes) *</label>
-              <input type="number" id="duration" formControlName="duration" 
-                     placeholder="Test duration" class="form-input" min="1" max="1440">
-            </div>
-            
-            <div class="form-group">
-              <label for="rampUpTime">Ramp-up Time (seconds) *</label>
-              <input type="number" id="rampUpTime" formControlName="rampUpTime" 
-                     placeholder="Time to reach full load" class="form-input" min="1">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="loop">Loop Count *</label>
-              <input type="number" id="loop" formControlName="loop" 
-                     placeholder="Number of iterations" class="form-input" min="1">
-            </div>
-            
-            <div class="form-group">
-              <label for="startdelay">Start Delay (seconds)</label>
-              <input type="number" id="startdelay" formControlName="startdelay" 
-                     placeholder="Delay before starting" class="form-input" min="0">
-            </div>
-          </div>
-        </div>
-
-        <!-- Advanced Configuration -->
-        <div class="form-section">
-          <h2>Advanced Configuration</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="startupTime">Startup Time (seconds) *</label>
-              <input type="number" id="startupTime" formControlName="startupTime" 
-                     placeholder="Thread startup time" class="form-input" min="1">
-            </div>
-            
-            <div class="form-group">
               <label for="holdLoadFor">Hold Load For (seconds) *</label>
-              <input type="number" id="holdLoadFor" formControlName="holdLoadFor" 
-                     placeholder="Duration to maintain load" class="form-input" min="1">
+              <input 
+                type="number" 
+                id="holdLoadFor"
+                formControlName="holdLoadFor"
+                class="form-input"
+                [class.error]="isFieldInvalid('holdLoadFor')"
+                min="1"
+                placeholder="30">
+              <div *ngIf="isFieldInvalid('holdLoadFor')" class="error-message">
+                {{ getFieldError('holdLoadFor') }}
+              </div>
             </div>
-          </div>
-
-          <div class="form-row">
+            
             <div class="form-group">
               <label for="shutdownTime">Shutdown Time (seconds) *</label>
-              <input type="number" id="shutdownTime" formControlName="shutdownTime" 
-                     placeholder="Thread shutdown time" class="form-input" min="1">
+              <input 
+                type="number" 
+                id="shutdownTime"
+                formControlName="shutdownTime"
+                class="form-input"
+                [class.error]="isFieldInvalid('shutdownTime')"
+                min="1"
+                placeholder="5">
+              <div *ngIf="isFieldInvalid('shutdownTime')" class="error-message">
+                {{ getFieldError('shutdownTime') }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="startThreadCount">Start Thread Count *</label>
+              <input 
+                type="number" 
+                id="startThreadCount"
+                formControlName="startThreadCount"
+                class="form-input"
+                [class.error]="isFieldInvalid('startThreadCount')"
+                min="1"
+                placeholder="2">
+              <div *ngIf="isFieldInvalid('startThreadCount')" class="error-message">
+                {{ getFieldError('startThreadCount') }}
+              </div>
             </div>
             
             <div class="form-group">
-              <label for="startThreadCount">Start Thread Count *</label>
-              <input type="number" id="startThreadCount" formControlName="startThreadCount" 
-                     placeholder="Initial thread count" class="form-input" min="1">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="initialDelay">Initial Delay (seconds)</label>
-            <input type="number" id="initialDelay" formControlName="initialDelay" 
-                   placeholder="Initial delay before test starts" class="form-input" min="0">
-          </div>
-        </div>
-
-        <!-- Test Script Upload -->
-        <div class="form-section">
-          <h2>Test Script *</h2>
-          <div class="file-upload-section">
-            <div class="file-upload-area" (click)="fileInput.click()" 
-                 (dragover)="onDragOver($event)" (drop)="onDrop($event)">
-              <input #fileInput type="file" (change)="onFileSelected($event)" 
-                     accept=".jmx,.pdf" style="display: none;">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <p>Click to upload or drag and drop</p>
-              <small>Supported formats: JMX, PDF</small>
-            </div>
-            <div *ngIf="selectedFile" class="selected-file">
-              <i class="fas fa-file"></i>
-              <span>{{selectedFile.name}}</span>
-              <button type="button" (click)="removeFile()" class="remove-file-btn">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div *ngIf="!selectedFile" class="file-requirement">
-              <i class="fas fa-exclamation-triangle"></i>
-              <span>A JMX or PDF file is required to create the test</span>
+              <label for="initialDelay">Initial Delay (seconds)</label>
+              <input 
+                type="number" 
+                id="initialDelay"
+                formControlName="initialDelay"
+                class="form-input"
+                min="0"
+                placeholder="0">
             </div>
           </div>
         </div>
 
-        <!-- Scheduling -->
+        <!-- Schedule Section -->
         <div class="form-section">
-          <h2>Scheduling</h2>
+          <h2>Schedule</h2>
           <div class="schedule-options">
             <div class="schedule-option">
-              <input type="radio" id="runNow" name="scheduleType" value="now" 
-                     (change)="onScheduleTypeChange('now')" checked>
-              <label for="runNow">Run Immediately</label>
+              <input 
+                type="radio" 
+                id="runNow" 
+                name="scheduleType" 
+                value="now"
+                [checked]="selectedScheduleType === 'now'"
+                (change)="onScheduleTypeChange('now')">
+              <label for="runNow">Run Now</label>
             </div>
             <div class="schedule-option">
-              <input type="radio" id="scheduleTest" name="scheduleType" value="scheduled" 
-                     (change)="onScheduleTypeChange('scheduled')">
-              <label for="scheduleTest">Schedule for Later</label>
+              <input 
+                type="radio" 
+                id="runScheduled" 
+                name="scheduleType" 
+                value="scheduled"
+                [checked]="selectedScheduleType === 'scheduled'"
+                (change)="onScheduleTypeChange('scheduled')">
+              <label for="runScheduled">Schedule for Later</label>
             </div>
           </div>
           
           <div *ngIf="selectedScheduleType === 'scheduled'" class="schedule-datetime">
             <div class="form-group">
-              <label for="scheduleTime">Schedule Date & Time</label>
-              <input type="datetime-local" id="scheduleTime" formControlName="scheduleTime" 
-                     class="form-input">
+              <label for="scheduleTime">Schedule Date & Time *</label>
+              <input 
+                type="datetime-local" 
+                id="scheduleTime"
+                formControlName="scheduleTime"
+                class="form-input">
             </div>
           </div>
         </div>
 
         <!-- Form Actions -->
         <div class="form-actions">
-          <button type="button" class="btn-secondary" routerLink="/tests">
-            Cancel
-          </button>
-          <button type="button" class="btn-outline" (click)="saveAsDraft()">
+          <button type="button" class="btn-secondary" (click)="saveAsDraft()" [disabled]="isCreating">
+            <i class="fas fa-save"></i>
             Save as Draft
           </button>
-          <button type="submit" class="btn-primary" [disabled]="createTestForm.invalid || isCreating || !selectedFile">
-            <span *ngIf="!isCreating">Create & Run Test</span>
-            <span *ngIf="isCreating">
-              <i class="fas fa-spinner fa-spin"></i>
-              Creating Test...
-            </span>
+          <button type="submit" class="btn-primary" [disabled]="isCreating || !selectedFile">
+            <i *ngIf="isCreating" class="fas fa-spinner fa-spin"></i>
+            <i *ngIf="!isCreating" class="fas fa-play"></i>
+            {{ isCreating ? 'Creating Test...' : 'Create Test' }}
           </button>
         </div>
       </form>

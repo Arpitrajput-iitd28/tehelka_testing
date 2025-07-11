@@ -4,12 +4,9 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { LayoutComponent } from '../../../shared/layout/layout';
-
-interface TeamMember {
-  email: string;
-  role: 'viewer' | 'tester' | 'admin';
-}
+import { CreateProjectService, CreateProjectFormData, TeamMember } from './create-project-service';
 
 @Component({
   selector: 'app-create-project',
@@ -27,10 +24,11 @@ export class CreateProjectComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private router: Router
+    private router: Router,
+    private createProjectService: CreateProjectService
   ) {
     this.createProjectForm = this.formBuilder.group({
-      projectName: ['', Validators.required],
+      projectName: ['', [Validators.required, Validators.minLength(3)]],
       projectKey: ['', [Validators.required, Validators.pattern(/^[A-Z]{3,10}$/)]],
       description: [''],
       category: [''],
@@ -74,6 +72,16 @@ export class CreateProjectComponent implements OnInit {
     }
   }
 
+  onProjectNameChange(): void {
+    const projectName = this.createProjectForm.get('projectName')?.value;
+    if (projectName) {
+      const generatedKey = this.createProjectService.generateProjectKey(projectName);
+      this.createProjectForm.patchValue({
+        projectKey: generatedKey
+      });
+    }
+  }
+
   onProjectKeyChange(): void {
     const projectKey = this.createProjectForm.get('projectKey')?.value;
     if (projectKey) {
@@ -84,7 +92,7 @@ export class CreateProjectComponent implements OnInit {
   }
 
   addTeamMember(): void {
-    if (this.newMemberEmail && this.isValidEmail(this.newMemberEmail)) {
+    if (this.newMemberEmail && this.createProjectService.validateEmail(this.newMemberEmail)) {
       const existingMember = this.teamMembers.find(m => m.email === this.newMemberEmail);
       if (!existingMember) {
         this.teamMembers.push({
@@ -105,38 +113,64 @@ export class CreateProjectComponent implements OnInit {
     this.teamMembers.splice(index, 1);
   }
 
-  isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
   saveAsDraft(): void {
-    console.log('Saving project as draft:', this.createProjectForm.value);
-    console.log('Team members:', this.teamMembers);
-    // Implement save as draft logic
-    alert('Project saved as draft!');
+    const formData: CreateProjectFormData = {
+      ...this.createProjectForm.value,
+      teamMembers: this.teamMembers
+    };
+
+    this.createProjectService.saveProjectAsDraft(formData).subscribe({
+      next: (response: any) => {
+        console.log('Draft saved:', response);
+        alert('Project saved as draft!');
+      },
+      error: (error: any) => {
+        console.error('Error saving draft:', error);
+        alert('Failed to save draft. Please try again.');
+      }
+    });
   }
 
   createProject(): void {
     if (this.createProjectForm.valid) {
       this.isCreating = true;
       
-      const projectData = {
+      const formData: CreateProjectFormData = {
         ...this.createProjectForm.value,
         teamMembers: this.teamMembers
       };
       
-      console.log('Creating project:', projectData);
+      console.log('Creating project with data:', formData);
       
-      // Simulate API call
-      setTimeout(() => {
-        this.isCreating = false;
-        alert('Project created successfully!');
-        this.router.navigate(['/projects']);
-      }, 2000);
+      this.createProjectService.createProject(formData).subscribe({
+        next: (project: { name: any; }) => {
+          console.log('Project created successfully:', project);
+          this.isCreating = false;
+          alert(`Project "${project.name}" created successfully!`);
+          this.router.navigate(['/projects']);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error creating project:', error);
+          this.isCreating = false;
+          
+          let errorMessage = 'Failed to create project.';
+          if (error.status === 0) {
+            errorMessage = 'Cannot connect to server. Please check your connection.';
+          } else if (error.status === 400) {
+            errorMessage = 'Invalid project data. Please check all required fields.';
+          } else if (error.status === 401 || error.status === 403) {
+            errorMessage = 'Authentication required. Please log in again.';
+          } else if (error.status === 409) {
+            errorMessage = 'A project with this name already exists.';
+          }
+          
+          alert(`Error: ${errorMessage}`);
+        }
+      });
     } else {
       console.log('Form is invalid');
       this.markFormGroupTouched();
+      alert('Please fill in all required fields correctly.');
     }
   }
 

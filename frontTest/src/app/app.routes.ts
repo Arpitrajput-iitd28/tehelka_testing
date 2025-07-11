@@ -11,6 +11,7 @@ import { SchedulesComponent } from './pages/schedules/schedules';
 import { SignupComponent } from './pages/signup/signup';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password';
+import { ProjectDetailsComponent } from './pages/projects/view-projects-details/view-projects-details';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -26,6 +27,7 @@ export const routes: Routes = [
     { path: 'projects', component: ViewProjectsComponent },
     { path: 'projects/create', component: CreateProjectComponent },
     { path: 'projects/manage', component: ManageProjectsComponent },
+    { path: 'projects/:id', component: ProjectDetailsComponent },
 
     { path: 'schedules', component: SchedulesComponent },
     

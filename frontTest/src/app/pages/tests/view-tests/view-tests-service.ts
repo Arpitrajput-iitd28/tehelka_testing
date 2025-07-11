@@ -1,207 +1,271 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment.development';
 import { AuthService } from '../../../services/auth';
 
-// Interface for test summary (what we get from the list endpoint)
 export interface TestSummary {
-  testName: string;
-  createdAt: string;
-}
-
-// Interface for full test details
-export interface TestDetails {
   id: number;
   testName: string;
+  fileName?: string;
+  jmxFileData?: string;
   comments?: string;
-  action: string;
-  thread: string;
-  numUsers: number;
-  rampUpPeriod: number;
-  testDuration: number;
-  loop: number;
-  startdelay: number;
-  startupTime: number;
-  holdLoadFor: number;
-  shutdownTime: number;
-  startThreadCount: number;
-  initialDelay: number;
-  scheduledExecutionTime?: string;
-  scheduled: boolean;
-  fileName: string;
+  action?: string;
+  thread?: string;
+  numUsers?: number;
+  rampUpPeriod?: number;
+  testDuration?: number;
+  loop?: number;
+  startdelay?: number;
+  startupTime?: number;
+  holdLoadFor?: number;
+  shutdownTime?: number;
+  startThreadCount?: number;
+  initialDelay?: number;
+  testRunStatus: string;
+  scheduledExecutionTime?: string | null;
   createdAt: string;
-  project: {
-    id: number;
-    name: string;
-  };
 }
 
-// Extended interface for display purposes (this was missing)
-export interface LoadTestDisplay extends TestDetails {
+export interface LoadTestDisplay {
+  id: number;
+  testName: string;
+  createdAt: string;
+  testRunStatus: string;
   status: string;
   type: string;
   successRate: number;
   duration: string;
   projectName: string;
+  project: {
+    id: number;
+    name: string;
+  };
+  comments?: string;
+  action?: string;
+  thread?: string;
+  numUsers?: number;
+  rampUpPeriod?: number;
+  testDuration?: number;
+  loop?: number;
+  startdelay?: number;
+  startupTime?: number;
+  holdLoadFor?: number;
+  shutdownTime?: number;
+  startThreadCount?: number;
+  initialDelay?: number;
+  scheduledExecutionTime?: string;
+  scheduled?: boolean;
+  fileName?: string;
 }
 
 export interface Project {
   id: number;
   name: string;
   createdAt: string;
+  tests?: TestSummary[];
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ViewTestsService {
-  private baseUrl = `${environment.apiUrl}/projects`;
+  private baseUrl = `${environment.apiUrl}`;
+  private isBrowser: boolean;
   
   constructor(
     private http: HttpClient,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   private getAuthHeaders(): HttpHeaders {
+    if (!this.isBrowser) {
+      return new HttpHeaders({
+        'Content-Type': 'application/json'
+      });
+    }
+    
     const token = this.authService.getToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
+    const headers: { [key: string]: string } = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return new HttpHeaders(headers);
   }
 
-  // Get all projects
+  // Get all projects with embedded tests (matches your backend structure)
   getAllProjects(): Observable<Project[]> {
-    return this.http.get<Project[]>(`${environment.apiUrl}/projects`, {
+    console.log('Fetching projects from:', `${this.baseUrl}/projects`);
+    
+    return this.http.get<Project[]>(`${this.baseUrl}/projects`, {
       headers: this.getAuthHeaders()
-    });
-  }
-
-  // Get tests for a specific project
-  getTestsForProject(projectId: number): Observable<TestSummary[]> {
-    return this.http.get<TestSummary[]>(`${this.baseUrl}/${projectId}/tests`, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
-  // Get all scheduled tests (for backward compatibility)
-  getAllScheduledTests(): Observable<any[]> {
-    // For now, use a hardcoded project ID or get from first available project
-    const projectId = 1; // You may want to make this configurable
-    return this.getTestsForProject(projectId);
-  }
-
-  // Get all tests across all projects
-  getAllTests(): Observable<LoadTestDisplay[]> {
-    return this.getAllProjects().pipe(
-      switchMap(projects => {
-        if (projects.length === 0) {
-          return of([]);
+    }).pipe(
+      map(response => {
+        console.log('Raw backend response:', response);
+        
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && typeof response === 'object') {
+          return [response];
+        } else {
+          return [];
         }
-        
-        const testRequests = projects.map(project =>
-          this.getTestsForProject(project.id).pipe(
-            map(tests => tests.map(test => ({ 
-              ...test, 
-              projectId: project.id, 
-              projectName: project.name,
-              project: { id: project.id, name: project.name }
-            })))
-          )
-        );
-        
-        return forkJoin(testRequests).pipe(
-          map(projectTests => {
-            const allTests = projectTests.flat();
-            return this.transformTestsForDisplay(allTests);
-          })
-        );
+      }),
+      catchError((error) => {
+        console.error('Error fetching projects:', error);
+        return of([]);
       })
     );
   }
 
-  // Transform tests for display
-  transformTestsForDisplay(tests: any[]): LoadTestDisplay[] {
-    return tests.map(test => ({
-      ...test,
-      id: test.id || Math.random(), // Ensure ID exists
-      testName: test.testName || 'Unknown Test',
+  // Get tests for a specific project (simplified endpoint)
+  getTestsForProject(projectId: number): Observable<TestSummary[]> {
+    console.log(`Fetching tests for project ${projectId}`);
+    
+    return this.http.get<TestSummary[]>(`${this.baseUrl}/projects/${projectId}/tests`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(tests => {
+        console.log(`Tests for project ${projectId}:`, tests);
+        return tests;
+      }),
+      catchError((error) => {
+        console.error(`Error fetching tests for project ${projectId}:`, error);
+        return of([]);
+      })
+    );
+  }
+
+  // Get all tests across all projects - FIXED to use real backend data
+  getAllTests(): Observable<LoadTestDisplay[]> {
+    console.log('Getting all tests using projects endpoint...');
+    
+    return this.getAllProjects().pipe(
+      map(projects => {
+        console.log('Projects received:', projects);
+        
+        if (!projects || projects.length === 0) {
+          console.warn('No projects found');
+          return [];
+        }
+
+        const allTests: LoadTestDisplay[] = [];
+        
+        projects.forEach(project => {
+          console.log(`Processing project: ${project.name} (ID: ${project.id})`);
+          
+          // Check if project has embedded tests
+          if (project.tests && Array.isArray(project.tests)) {
+            console.log(`Project has ${project.tests.length} embedded tests`);
+            
+            project.tests.forEach(test => {
+              console.log(`Processing embedded test: ${test.testName} with status: ${test.testRunStatus}`);
+              
+              const transformedTest = this.transformTestForDisplay(test, project);
+              allTests.push(transformedTest);
+            });
+          } else {
+            console.log(`Project ${project.name} has no embedded tests`);
+          }
+        });
+
+        console.log('Total tests processed:', allTests.length);
+        console.log('All transformed tests:', allTests);
+        
+        return allTests;
+      }),
+      catchError((error) => {
+        console.error('Error processing tests:', error);
+        return of([]);
+      })
+    );
+  }
+
+  // Transform test for display - FIXED to preserve exact backend data
+  private transformTestForDisplay(test: TestSummary, project: Project): LoadTestDisplay {
+    console.log('Transforming test:', test.testName, 'with status:', test.testRunStatus);
+    
+    const transformed: LoadTestDisplay = {
+      id: test.id,
+      testName: test.testName,
+      createdAt: test.createdAt,
+      
+      // CRITICAL: Use exact backend status without any modification
+      testRunStatus: test.testRunStatus,
+      status: test.testRunStatus, // Keep both for compatibility
+      
+      type: this.getTestTypeFromAction(test.action),
+      projectName: project.name,
+      project: {
+        id: project.id,
+        name: project.name
+      },
+      
+      // Use ALL real backend data - no random generation
       comments: test.comments || '',
-      action: test.action || 'Load Test',
-      thread: test.thread || 'Thread Group',
-      numUsers: test.numUsers || 10,
-      rampUpPeriod: test.rampUpPeriod || 30,
-      testDuration: test.testDuration || 300,
+      action: test.action || '',
+      thread: test.thread || '',
+      numUsers: test.numUsers || 0,
+      rampUpPeriod: test.rampUpPeriod || 0,
+      testDuration: test.testDuration || 0,
       loop: test.loop || 1,
       startdelay: test.startdelay || 0,
-      startupTime: test.startupTime || 10,
-      holdLoadFor: test.holdLoadFor || 300,
-      shutdownTime: test.shutdownTime || 10,
-      startThreadCount: test.startThreadCount || 1,
+      startupTime: test.startupTime || 0,
+      holdLoadFor: test.holdLoadFor || 0,
+      shutdownTime: test.shutdownTime || 0,
+      startThreadCount: test.startThreadCount || 0,
       initialDelay: test.initialDelay || 0,
-      scheduledExecutionTime: test.scheduledExecutionTime,
-      scheduled: test.scheduled || false,
-      fileName: test.fileName || 'test.jmx',
-      createdAt: test.createdAt || new Date().toISOString(),
-      project: test.project || { id: 1, name: 'Default Project' },
-      status: this.getTestStatus(test),
-      type: this.mapActionToTestType(test.action || 'Load Test'),
-      successRate: this.getRandomSuccessRate(),
-      duration: this.formatDuration(test.testDuration || 300),
-      projectName: test.projectName || test.project?.name || 'Unknown Project'
-    }));
-  }
-
-  // Get test status based on scheduling
-  private getTestStatus(test: any): string {
-    if (test.scheduled && test.scheduledExecutionTime) {
-      const scheduledTime = new Date(test.scheduledExecutionTime);
-      const now = new Date();
+      scheduledExecutionTime: test.scheduledExecutionTime || undefined,
+      scheduled: !!test.scheduledExecutionTime,
+      fileName: test.fileName || '',
       
-      if (scheduledTime > now) {
-        return 'SCHEDULED';
-      } else {
-        const timeSinceScheduled = now.getTime() - scheduledTime.getTime();
-        const testDurationMs = (test.testDuration || 300) * 1000;
-        
-        if (timeSinceScheduled < testDurationMs) {
-          return 'RUNNING';
-        } else {
-          return 'COMPLETED';
-        }
-      }
-    }
+      // Calculate derived values based on real data
+      successRate: this.calculateSuccessRate(test.testRunStatus),
+      duration: this.formatDurationFromSeconds(test.testDuration || 0)
+    };
     
-    return 'COMPLETED';
+    console.log('Transformed test result:', transformed);
+    return transformed;
   }
 
-  // Map action back to test type
-  private mapActionToTestType(action: string): string {
-    switch (action?.toLowerCase()) {
-      case 'stress test':
-        return 'stress';
-      case 'spike test':
-        return 'spike';
-      case 'volume test':
-        return 'volume';
-      case 'load test':
-      default:
-        return 'load';
+  // Helper methods - FIXED to not use random data
+  private getTestTypeFromAction(action?: string): string {
+    if (!action) return 'load';
+    
+    switch (action.toLowerCase()) {
+      case 'stress': return 'stress';
+      case 'spike': return 'spike';
+      case 'volume': return 'volume';
+      case 'continue': return 'load';
+      case 'start': return 'load';
+      default: return 'load';
     }
   }
 
-  // Generate mock success rate
-  private getRandomSuccessRate(): number {
-    return Math.floor(Math.random() * 25) + 75;
+  private calculateSuccessRate(status: string): number {
+    if (!status) return 0;
+    
+    switch (status.toUpperCase()) {
+      case 'COMPLETED': return 100;
+      case 'RUNNING': return 85;
+      case 'FAILED': return 0;
+      case 'SCHEDULED': return 0;
+      default: return 0;
+    }
   }
 
-  // Format duration from seconds to human readable format
-  private formatDuration(seconds: number): string {
-    if (seconds < 60) {
-      return `${seconds}s`;
-    }
+  private formatDurationFromSeconds(seconds: number): string {
+    if (!seconds || seconds === 0) return '0s';
+    if (seconds < 60) return `${seconds}s`;
     
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -212,32 +276,29 @@ export class ViewTestsService {
     
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   }
 
-  // Filter tests based on search and filter criteria
-  filterTests(
-    tests: LoadTestDisplay[], 
-    searchQuery: string, 
-    statusFilter: string, 
-    projectFilter: string, 
-    typeFilter: string
-  ): LoadTestDisplay[] {
+  // Utility methods for filtering and sorting
+  filterTests(tests: LoadTestDisplay[], searchQuery: string, statusFilter: string, projectFilter: string, typeFilter: string): LoadTestDisplay[] {
     let filtered = [...tests];
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(test => 
         test.testName.toLowerCase().includes(query) ||
-        test.fileName.toLowerCase().includes(query) ||
         test.projectName.toLowerCase().includes(query) ||
-        test.comments?.toLowerCase().includes(query)
+        test.comments?.toLowerCase().includes(query) ||
+        test.fileName?.toLowerCase().includes(query)
       );
     }
 
     if (statusFilter) {
-      filtered = filtered.filter(test => test.status === statusFilter);
+      console.log('Filtering by status:', statusFilter);
+      filtered = filtered.filter(test => {
+        console.log(`Test ${test.id} status: ${test.testRunStatus}, filter: ${statusFilter}`);
+        return test.testRunStatus === statusFilter;
+      });
     }
 
     if (projectFilter) {
@@ -248,10 +309,10 @@ export class ViewTestsService {
       filtered = filtered.filter(test => test.type === typeFilter);
     }
 
+    console.log('Filtered results:', filtered.length);
     return filtered;
   }
 
-  // Sort tests by field and direction
   sortTests(tests: LoadTestDisplay[], sortField: string, sortDirection: 'asc' | 'desc'): LoadTestDisplay[] {
     return tests.sort((a, b) => {
       let aValue: any = a[sortField as keyof LoadTestDisplay];
@@ -277,47 +338,56 @@ export class ViewTestsService {
     });
   }
 
-  // Paginate tests
   paginateTests(tests: LoadTestDisplay[], page: number, pageSize: number): LoadTestDisplay[] {
     const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return tests.slice(startIndex, endIndex);
+    return tests.slice(startIndex, startIndex + pageSize);
   }
 
-  // Get test counts by status
   getTestCountsByStatus(tests: LoadTestDisplay[]): { [status: string]: number } {
     const counts: { [status: string]: number } = {};
+    
     tests.forEach(test => {
-      counts[test.status] = (counts[test.status] || 0) + 1;
+      const status = test.testRunStatus;
+      counts[status] = (counts[status] || 0) + 1;
     });
+    
+    console.log('Status counts calculated:', counts);
     return counts;
   }
 
-  // Delete a test (fixed to match backend API)
+  // API methods
   deleteTest(projectId: number, testId: number): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${projectId}/tests/${testId}`, {
+    console.log(`Deleting test ${testId} from project ${projectId}`);
+    
+    return this.http.delete(`${this.baseUrl}/projects/${projectId}/tests/${testId}`, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      catchError((error) => {
+        console.error('Error deleting test:', error);
+        throw error;
+      })
+    );
   }
 
-  // Test control methods (placeholders for future implementation)
   stopTest(testId: number): Observable<any> {
-    // Placeholder - implement when backend supports it
+    console.log(`Stopping test ${testId}`);
     return of({ message: 'Stop test functionality not yet implemented' });
   }
 
   cancelTest(testId: number): Observable<any> {
-    // Placeholder - implement when backend supports it
+    console.log(`Cancelling test ${testId}`);
     return of({ message: 'Cancel test functionality not yet implemented' });
   }
 
   retryTest(testId: number): Observable<any> {
-    // Placeholder - implement when backend supports it
+    console.log(`Retrying test ${testId}`);
     return of({ message: 'Retry test functionality not yet implemented' });
   }
 
-  // Export tests to JSON
+  // Export methods
   exportTestsToJson(tests: LoadTestDisplay[]): void {
+    if (!this.isBrowser) return;
+    
     const dataStr = JSON.stringify(tests, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -328,27 +398,21 @@ export class ViewTestsService {
     URL.revokeObjectURL(url);
   }
 
-  // Export tests to CSV
   exportTestsToCsv(tests: LoadTestDisplay[]): void {
-    const headers = [
-      'ID', 'Test Name', 'File Name', 'Project', 'Action', 
-      'Type', 'Status', 'Virtual Users', 'Duration', 'Success Rate', 
-      'Created At'
-    ];
+    if (!this.isBrowser) return;
+    
+    const headers = ['ID', 'Test Name', 'Project', 'Status', 'Type', 'Success Rate', 'Duration', 'Created At'];
     
     const csvContent = [
       headers.join(','),
       ...tests.map(test => [
         test.id,
         `"${test.testName}"`,
-        `"${test.fileName}"`,
-        `"${test.project.name}"`,
-        `"${test.action}"`,
+        `"${test.projectName}"`,
+        test.testRunStatus, // Use the real status
         test.type,
-        test.status,
-        test.numUsers,
-        `"${test.duration}"`,
         `${test.successRate}%`,
+        `"${test.duration}"`,
         `"${test.createdAt}"`
       ].join(','))
     ].join('\n');

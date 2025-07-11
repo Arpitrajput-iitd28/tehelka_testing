@@ -1,1 +1,241 @@
-<p>view-projects works!</p>
+<app-layout pageTitle="View Projects">
+  <div class="view-projects-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Projects</h1>
+        <p>Manage and monitor all your testing projects</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-refresh" (click)="refreshProjects()" [disabled]="isRefreshing">
+          <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+          <span>{{ isRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
+        </button>
+        <button class="btn-primary" routerLink="/projects/create">
+          <i class="fas fa-plus"></i>
+          Create New Project
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner">
+          <div class="spinner-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+        <div class="loading-text">
+          <h3>Loading Projects...</h3>
+          <p>Fetching project data</p>
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading" class="main-content">
+      <!-- Filters and Search -->
+      <div class="filters-section">
+        <div class="search-filter">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search projects..." [(ngModel)]="searchQuery" 
+                   (input)="onSearch()">
+          </div>
+        </div>
+        
+        <div class="filter-controls">
+          <select [(ngModel)]="statusFilter" (change)="onFilterChange()" class="filter-select">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          
+          <button class="btn-outline" (click)="clearFilters()">
+            <i class="fas fa-times"></i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon active">
+            <i class="fas fa-folder-open"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getProjectCountByStatus('active')}}</h3>
+            <p>Active Projects</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <i class="fas fa-folder"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{allProjects.length}}</h3>
+            <p>Total Projects</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon tests">
+            <i class="fas fa-vial"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getTotalTestsCount()}}</h3>
+            <p>Total Tests</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon recent">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{getRecentProjectsCount()}}</h3>
+            <p>Recent Projects</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FIXED Projects Table -->
+      <div class="projects-table-container">
+        <div class="table-header">
+          <h2>All Projects</h2>
+          <div class="table-actions">
+            <button class="btn-outline" (click)="exportProjects()">
+              <i class="fas fa-download"></i>
+              Export JSON
+            </button>
+            <button class="btn-outline" (click)="exportProjectsCsv()">
+              <i class="fas fa-file-csv"></i>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        
+        <!-- Table Loading State -->
+        <div *ngIf="isRefreshing" class="table-loading">
+          <div class="table-loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Refreshing project data...</span>
+          </div>
+        </div>
+        
+        <div class="table-wrapper" [class.refreshing]="isRefreshing">
+          <table class="projects-table">
+            <thead>
+              <tr>
+                <th class="sortable col-name" (click)="sortBy('name')">
+                  Project Name
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'name' && sortDirection === 'asc'"
+                    [class.fa-sort-down]="sortField === 'name' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable col-created" (click)="sortBy('createdAt')">
+                  Created At
+                  <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'createdAt' && sortDirection === 'asc'"
+                    [class.fa-sort-down]="sortField === 'createdAt' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="col-age">Age</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- CORRECTED: Each row must have exactly 4 cells to match the 4 headers -->
+              <tr *ngFor="let project of paginatedProjects; trackBy: trackByProjectId" 
+                  class="project-row clickable-row"
+                  (click)="viewProject(project.id)">
+                <!-- Cell 1: Project Name -->
+                <td class="col-name">
+                  <div class="project-name">
+                    <div class="project-title">{{project.name}}</div>
+                    <div class="project-id">ID: {{project.id}}</div>
+                  </div>
+                </td>
+                <!-- Cell 2: Created At -->
+                <td class="col-created">
+                  <span class="date-text">{{formatDate(project.createdAt)}}</span>
+                </td>
+                <!-- Cell 3: Age -->
+                <td class="col-age">
+                  <span class="age-text">{{getProjectAge(project.createdAt)}}</span>
+                </td>
+                <!-- Cell 4: Actions -->
+                <td class="col-actions">
+                  <div class="action-buttons">
+                    <button class="btn-action btn-view" 
+                        (click)="viewProject(project.id); $event.stopPropagation()" 
+                        title="View Project">
+                      <img src="view-proj.png" alt="View">
+                    </button>
+                    <button (click)="deleteProject(project.id); $event.stopPropagation()" 
+                            class="btn-action btn-delete" 
+                            title="Delete Project">
+                      <img src="trash.png" alt="Delete">
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Empty State -->
+          <div *ngIf="filteredProjects.length === 0 && !isLoading && !isRefreshing" class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-folder-open"></i>
+            </div>
+            <h3>No Projects Found</h3>
+            <p>{{searchQuery || statusFilter ? 'No projects match your current filters.' : 'You haven\'t created any projects yet.'}}</p>
+            <button class="btn-primary" routerLink="/projects/create">
+              <i class="fas fa-plus"></i>
+              Create Your First Project
+            </button>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="filteredProjects.length > pageSize">
+          <div class="pagination-info">
+            Showing {{(currentPage - 1) * pageSize + 1}} to {{Math.min(currentPage * pageSize, filteredProjects.length)}} 
+            of {{filteredProjects.length}} projects
+          </div>
+          
+          <div class="pagination-controls">
+            <button (click)="goToPage(currentPage - 1)" 
+                    [disabled]="currentPage === 1" 
+                    class="btn-pagination">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <span class="page-numbers">
+              <button *ngFor="let page of getPageNumbers()" 
+                      (click)="goToPage(page)" 
+                      [class.active]="page === currentPage"
+                      class="btn-page">
+                {{page}}
+              </button>
+            </span>
+            
+            <button (click)="goToPage(currentPage + 1)" 
+                    [disabled]="currentPage === totalPages" 
+                    class="btn-pagination">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>

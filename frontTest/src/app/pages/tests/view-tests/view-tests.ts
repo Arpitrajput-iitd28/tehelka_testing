@@ -1,11 +1,10 @@
-import { ApplicationRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { LayoutComponent } from '../../../shared/layout/layout';
 import { ViewTestsService, LoadTestDisplay } from './view-tests-service';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-view-tests',
@@ -19,71 +18,100 @@ export class ViewTestsComponent implements OnInit {
   allTests: LoadTestDisplay[] = [];
   filteredTests: LoadTestDisplay[] = [];
   paginatedTests: LoadTestDisplay[] = [];
-  
+
   // Filter properties
   searchQuery = '';
   statusFilter = '';
   projectFilter = '';
   typeFilter = '';
-  
+
   // Sorting properties
   sortField = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
-  
+
   // Pagination properties
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
-  
+
   // UI state
   isRefreshing = false;
   isLoading = true;
-  Math = Math; // Make Math available in template
+  Math = Math;
+
+  // Add current date for template
+  currentDate = new Date();
 
   constructor(
     private router: Router,
     private viewTestsService: ViewTestsService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadTests();
   }
 
-  // Load tests from API
+  // Load tests - Fixed to use real backend data structure
   loadTests(): void {
     this.isLoading = true;
-    this.viewTestsService.getAllScheduledTests().subscribe({
+    this.cdr.detectChanges();
+
+    console.log('Loading tests from backend...');
+    
+    this.viewTestsService.getAllTests().subscribe({
       next: (tests) => {
-        console.log('Raw tests from API:', tests);
-        this.allTests = this.viewTestsService.transformTestsForDisplay(tests);
-        console.log('Transformed tests:', this.allTests);
-        this.isLoading = false;
+        console.log('Raw tests loaded from backend:', tests);
+        console.log('Number of tests loaded:', tests.length);
         
-        // Use setTimeout to trigger change detection - no injection needed
-        setTimeout(() => {
-          this.applyFilters();
-        }, 0);
+        // Log each test's status to debug
+        tests.forEach(test => {
+          console.log(`Test ${test.id} (${test.testName}): Status = ${test.testRunStatus}`);
+        });
+        
+        this.allTests = tests;
+        this.isLoading = false;
+        this.currentDate = new Date();
+        this.applyFilters();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading tests:', error);
         this.isLoading = false;
+        this.allTests = [];
+        this.currentDate = new Date();
+        this.applyFilters();
+        this.cdr.detectChanges();
       }
     });
   }
 
-  // Refresh tests
+  // Refresh tests with proper change detection
   refreshTests(): void {
     this.isRefreshing = true;
-    this.viewTestsService.getAllScheduledTests().subscribe({
+    this.cdr.detectChanges();
+    
+    console.log('Refreshing tests...');
+    
+    this.viewTestsService.getAllTests().subscribe({
       next: (tests) => {
-        this.allTests = this.viewTestsService.transformTestsForDisplay(tests);
+        console.log('Tests refreshed from backend:', tests);
+        
+        // Log status verification on refresh
+        tests.forEach(test => {
+          console.log(`Refreshed Test ${test.id}: Status = ${test.testRunStatus}`);
+        });
+        
+        this.allTests = tests;
         this.isRefreshing = false;
+        this.currentDate = new Date();
         this.applyFilters();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error refreshing tests:', error);
         this.isRefreshing = false;
-        alert('Failed to refresh tests. Please try again.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -92,11 +120,13 @@ export class ViewTestsComponent implements OnInit {
   onSearch(): void {
     this.currentPage = 1;
     this.applyFilters();
+    this.cdr.detectChanges();
   }
 
   onFilterChange(): void {
     this.currentPage = 1;
     this.applyFilters();
+    this.cdr.detectChanges();
   }
 
   clearFilters(): void {
@@ -106,10 +136,12 @@ export class ViewTestsComponent implements OnInit {
     this.typeFilter = '';
     this.currentPage = 1;
     this.applyFilters();
+    this.cdr.detectChanges();
   }
 
   applyFilters(): void {
-    // Use service method for filtering
+    console.log('Applying filters to tests:', this.allTests.length);
+    
     this.filteredTests = this.viewTestsService.filterTests(
       this.allTests,
       this.searchQuery,
@@ -118,6 +150,8 @@ export class ViewTestsComponent implements OnInit {
       this.typeFilter
     );
 
+    console.log('Filtered tests count:', this.filteredTests.length);
+    
     this.applySorting();
     this.updatePagination();
   }
@@ -130,12 +164,12 @@ export class ViewTestsComponent implements OnInit {
       this.sortField = field;
       this.sortDirection = 'asc';
     }
+
     this.applySorting();
     this.updatePagination();
   }
 
   applySorting(): void {
-    // Use service method for sorting
     this.filteredTests = this.viewTestsService.sortTests(
       this.filteredTests,
       this.sortField,
@@ -147,13 +181,13 @@ export class ViewTestsComponent implements OnInit {
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredTests.length / this.pageSize);
     this.currentPage = Math.min(this.currentPage, this.totalPages || 1);
-    
-    // Use service method for pagination
     this.paginatedTests = this.viewTestsService.paginateTests(
       this.filteredTests,
       this.currentPage,
       this.pageSize
     );
+    
+    console.log('Paginated tests for display:', this.paginatedTests);
   }
 
   goToPage(page: number): void {
@@ -168,20 +202,22 @@ export class ViewTestsComponent implements OnInit {
     const maxVisible = 5;
     let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
+
     return pages;
   }
 
   // Utility Methods
   getTestCountByStatus(status: string): number {
     const counts = this.viewTestsService.getTestCountsByStatus(this.allTests);
+    console.log('Status counts:', counts);
     return counts[status] || 0;
   }
 
@@ -189,92 +225,86 @@ export class ViewTestsComponent implements OnInit {
     return test.id;
   }
 
-  // Action Methods - API Integration Points
+  // Action Methods
   viewReport(testId: number): void {
-    console.log('Viewing report for test:', testId);
     this.router.navigate(['/reports', testId]);
   }
 
   stopTest(testId: number): void {
-    console.log('Stopping test:', testId);
     if (confirm('Are you sure you want to stop this test?')) {
+      // TODO: Implement actual stop functionality
       this.viewTestsService.stopTest(testId).subscribe({
         next: () => {
           console.log('Test stopped successfully');
-          this.loadTests(); // Reload to get updated status
-          alert('Test stopped successfully');
+          this.refreshTests(); // Refresh to get updated status
         },
         error: (error) => {
           console.error('Error stopping test:', error);
-          alert('Failed to stop test. This feature may not be implemented yet.');
+          alert('Failed to stop test. Please try again.');
         }
       });
     }
   }
 
   cancelTest(testId: number): void {
-    console.log('Cancelling test:', testId);
     if (confirm('Are you sure you want to cancel this scheduled test?')) {
+      // TODO: Implement actual cancel functionality
       this.viewTestsService.cancelTest(testId).subscribe({
         next: () => {
           console.log('Test cancelled successfully');
-          this.loadTests(); // Reload to remove cancelled test
-          alert('Test cancelled successfully');
+          this.refreshTests(); // Refresh to get updated status
         },
         error: (error) => {
           console.error('Error cancelling test:', error);
-          alert('Failed to cancel test. This feature may not be implemented yet.');
+          alert('Failed to cancel test. Please try again.');
         }
       });
     }
   }
 
   editTest(testId: number): void {
-    console.log('Editing test:', testId);
     this.router.navigate(['/tests/edit', testId]);
   }
 
   retryTest(testId: number): void {
-    console.log('Retrying test:', testId);
     if (confirm('Are you sure you want to retry this test?')) {
+      // TODO: Implement actual retry functionality
       this.viewTestsService.retryTest(testId).subscribe({
         next: () => {
           console.log('Test retry initiated successfully');
-          this.loadTests(); // Reload to get updated status
-          alert('Test retry initiated successfully');
+          this.refreshTests(); // Refresh to get updated status
         },
         error: (error) => {
           console.error('Error retrying test:', error);
-          alert('Failed to retry test. This feature may not be implemented yet.');
+          alert('Failed to retry test. Please try again.');
         }
       });
     }
   }
 
   duplicateTest(testId: number): void {
-    console.log('Duplicating test:', testId);
     this.router.navigate(['/tests/create'], { queryParams: { duplicate: testId } });
   }
 
   deleteTest(testId: number): void {
-    console.log('Deleting test:', testId);
-    
     if (confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
-      // Find the test to get project ID
       const test = this.allTests.find(t => t.id === testId);
       if (!test) {
         alert('Test not found');
         return;
       }
 
-      // Fix: Access project.id and pass both parameters
+      // Use the actual delete API call
       this.viewTestsService.deleteTest(test.project.id, testId).subscribe({
         next: () => {
           console.log('Test deleted successfully');
-          this.loadTests(); // Reload the list
+          // Remove from local array
+          this.allTests = this.allTests.filter(t => t.id !== testId);
+          this.applyFilters();
+          this.cdr.detectChanges();
           alert('Test deleted successfully');
         },
-        error: (error: any) => {
+        error: (error) => {
           console.error('Error deleting test:', error);
           alert('Failed to delete test. Please try again.');
         }
@@ -282,31 +312,25 @@ export class ViewTestsComponent implements OnInit {
     }
   }
 
-
   exportTests(): void {
-    console.log('Exporting tests');
     if (this.filteredTests.length === 0) {
       alert('No tests to export');
       return;
     }
-    
-    // Use service method for export
     this.viewTestsService.exportTestsToJson(this.filteredTests);
   }
 
   exportTestsCsv(): void {
-    console.log('Exporting tests to CSV');
     if (this.filteredTests.length === 0) {
       alert('No tests to export');
       return;
     }
-    
-    // Use service method for CSV export
     this.viewTestsService.exportTestsToCsv(this.filteredTests);
   }
 
-  // Additional helper methods for template
+  // Template helper methods - Fixed to use correct status property
   getStatusClass(status: string): string {
+    console.log('Getting status class for:', status);
     return `status-${status.toLowerCase()}`;
   }
 
@@ -318,34 +342,36 @@ export class ViewTestsComponent implements OnInit {
     return new Date(dateString);
   }
 
+  // Status check methods - Fixed to use testRunStatus
   isTestRunning(test: LoadTestDisplay): boolean {
-    return test.status === 'RUNNING';
+    return test.testRunStatus === 'RUNNING';
   }
 
   isTestScheduled(test: LoadTestDisplay): boolean {
-    return test.status === 'SCHEDULED';
+    return test.testRunStatus === 'SCHEDULED';
   }
 
   isTestCompleted(test: LoadTestDisplay): boolean {
-    return test.status === 'COMPLETED';
+    return test.testRunStatus === 'COMPLETED';
   }
 
   isTestFailed(test: LoadTestDisplay): boolean {
-    return test.status === 'FAILED';
+    return test.testRunStatus === 'FAILED';
   }
 
   canStopTest(test: LoadTestDisplay): boolean {
-    return test.status === 'RUNNING';
+    return test.testRunStatus === 'RUNNING';
   }
 
   canCancelTest(test: LoadTestDisplay): boolean {
-    return test.status === 'SCHEDULED';
+    return test.testRunStatus === 'SCHEDULED';
   }
 
   canRetryTest(test: LoadTestDisplay): boolean {
-    return test.status === 'FAILED';
+    return test.testRunStatus === 'FAILED';
   }
 
+  // Helper methods for template
   getProjectOptions(): string[] {
     const projects = [...new Set(this.allTests.map(test => test.project.name))];
     return projects.sort();
@@ -354,5 +380,23 @@ export class ViewTestsComponent implements OnInit {
   getTypeOptions(): string[] {
     const types = [...new Set(this.allTests.map(test => test.type))];
     return types.sort();
+  }
+
+  // Status display methods - Use actual backend status
+  getStatusDisplayText(status: string): string {
+    console.log('Getting display text for status:', status);
+    return status || 'UNKNOWN';
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const statusLower = status.toLowerCase();
+    return `status-badge status-${statusLower}`;
+  }
+
+  // Debug method for template
+  debugTest(test: LoadTestDisplay): void {
+    console.log('Debug test object:', test);
+    console.log('Test status:', test.testRunStatus);
+    console.log('Test status (legacy):', test.status);
   }
 }
