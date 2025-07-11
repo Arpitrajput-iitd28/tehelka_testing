@@ -8,7 +8,7 @@
       </div>
       <div class="header-actions">
         <button class="btn-secondary" routerLink="/tests">
-          <img src = "back.png" alt="Back" width="20" height="20">
+          <img src = "back.webp" alt="Back" width="20" height="20">
           Back to Tests
         </button>
       </div>
@@ -174,7 +174,7 @@
             <div class="ultimate-thread-header">
               <h3>Ultimate Thread Group Schedule</h3>
               <button type="button" class="btn-add-row" (click)="addThreadScheduleRow()">
-                <i class="fas fa-plus"></i>
+                <img src = "plus.webp" alt="Add Row" width="20" height="20">
                 Add Row
               </button>
             </div>
@@ -241,10 +241,10 @@
                     <td>
                       <div class="table-actions">
                         <button type="button" class="btn-table-action btn-copy" (click)="copyRow(i)" title="Copy Row">
-                          <i class="fas fa-copy"></i>
+                          <img src = "copy.png" alt="Copy Row" class = "action-icon">
                         </button>
                         <button type="button" class="btn-table-action btn-delete" (click)="deleteRow(i)" title="Delete Row" [disabled]="threadScheduleRows.length <= 1">
-                          <i class="fas fa-trash"></i>
+                          <img src = "delete.webp" alt="Delete Row" class = "action-icon">
                         </button>
                       </div>
                     </td>
@@ -276,7 +276,7 @@
                  (click)="fileInput.click()"
                  (dragover)="onDragOver($event)"
                  (drop)="onDrop($event)">
-              <i class="fas fa-cloud-upload-alt"></i>
+              <img src = "upload.png" alt="Upload" class="upload-icon">
               <p>Click to upload or drag and drop</p>
               <small>JMX or PDF files (Max 10MB)</small>
             </div>
@@ -288,7 +288,7 @@
                    style="display: none;">
             
             <div *ngIf="selectedFile" class="selected-file">
-              <i class="fas fa-file-alt"></i>
+              <img src = "file.png" alt="File" class="file-icon">
               <span>{{ selectedFile.name }}</span>
               <button type="button" class="remove-file-btn" (click)="removeFile()">
                 <i class="fas fa-times"></i>
@@ -296,7 +296,7 @@
             </div>
             
             <div class="file-requirement">
-              <i class="fas fa-info-circle"></i>
+              <img src ="info.png" alt="Info" class="file-icon">
               <span>JMX file is required for test execution. PDF files are for documentation only.</span>
             </div>
           </div>
@@ -343,12 +343,12 @@
         <!-- Form Actions -->
         <div class="form-actions">
           <button type="button" class="btn-secondary" (click)="saveAsDraft()" [disabled]="isCreating">
-            <i class="fas fa-save"></i>
+            <img src = "save.png" alt="Save as Draft" class="save-icon">
             Save as Draft
           </button>
           <button type="submit" class="btn-primary" [disabled]="isCreating || !selectedFile">
-            <i *ngIf="isCreating" class="fas fa-spinner fa-spin"></i>
-            <i *ngIf="!isCreating" class="fas fa-play"></i>
+            <img *ngIf="isCreating" src="spinning.png" alt="Loading" [class.spin]="isCreating" width="20" height="20" />
+            <img *ngIf="!isCreating" src="plus.webp" alt="Create" width="20" height="20" />
             {{ isCreating ? 'Creating Test...' : 'Create Test' }}
           </button>
         </div>

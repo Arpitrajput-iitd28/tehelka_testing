@@ -264,10 +264,10 @@
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    color: white;
+    background-color: white;
 }
 
-.stat-icon.running {
+/* .stat-icon.running {
     background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
@@ -281,7 +281,7 @@
 
 .stat-icon.scheduled {
     background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
+} */
 
 .stat-content h3 {
     font-size: 2rem;
@@ -958,4 +958,26 @@
         content: attr(title);
         font-size: 0.75rem;
     }
+}
+
+.plus-icon {
+    width: 20px;
+    height: 20px;
+    
+}
+.clear-filter{
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
+.search-box .search-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  opacity: 0.6;
+}   
+
+.table-icon{
+  width: 25px;
+  height: 25px;
 }

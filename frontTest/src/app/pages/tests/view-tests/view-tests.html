@@ -12,7 +12,7 @@
           <span>{{ isRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
         </button>
         <button class="btn-primary" routerLink="/tests/create">
-          <i class="fas fa-plus"></i>
+          <img src = "plus.webp" alt="New Test" class="plus-icon">
           Create New Test
         </button>
       </div>
@@ -47,9 +47,13 @@
       <div class="filters-section">
         <div class="search-filter">
           <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search tests..." [(ngModel)]="searchQuery" 
-                   (input)="onSearch()">
+            <img src="search.png" alt="Search" class="search-icon" />
+            <input
+              type="text"
+              placeholder="Search tests..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+            />
           </div>
         </div>
         
@@ -74,7 +78,7 @@
           </select>
           
           <button class="btn-outline" (click)="clearFilters()">
-            <i class="fas fa-times"></i>
+            <img src = "clear-filter.png" alt="Clear Filters" class="clear-filter">
             Clear Filters
           </button>
         </div>
@@ -84,7 +88,7 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon running">
-            <i class="fas fa-play-circle"></i>
+            <img src = "running2.png" alt="Running" class="stat-icon">
           </div>
           <div class="stat-content">
             <h3>{{getTestCountByStatus('RUNNING')}}</h3>
@@ -94,7 +98,7 @@
         
         <div class="stat-card">
           <div class="stat-icon completed">
-            <i class="fas fa-check-circle"></i>
+            <img src = "completed.webp" alt="Completed" class="stat-icon">
           </div>
           <div class="stat-content">
             <h3>{{getTestCountByStatus('COMPLETED')}}</h3>
@@ -104,7 +108,7 @@
         
         <div class="stat-card">
           <div class="stat-icon failed">
-            <i class="fas fa-exclamation-circle"></i>
+            <img src = "failed.png" alt="Failed" class="stat-icon">
           </div>
           <div class="stat-content">
             <h3>{{getTestCountByStatus('FAILED')}}</h3>
@@ -114,7 +118,7 @@
         
         <div class="stat-card">
           <div class="stat-icon scheduled">
-            <i class="fas fa-clock"></i>
+            <img src = "schedule.png" alt="Scheduled" class="stat-icon">
           </div>
           <div class="stat-content">
             <h3>{{getTestCountByStatus('SCHEDULED')}}</h3>
@@ -217,7 +221,7 @@
                             class="btn-action btn-stop" 
                             title="Stop Test"
                             aria-label="Stop Test">
-                      <i class="fas fa-stop"></i>
+                      <img src = "stop-test.webp" alt="Stop Test" class="table-icon">
                     </button>
                     
                     <button *ngIf="canCancelTest(test)" 
@@ -225,7 +229,7 @@
                             class="btn-action btn-cancel" 
                             title="Cancel Test"
                             aria-label="Cancel Test">
-                      <i class="fas fa-ban"></i>
+                      <img src = "cancel-test.png" alt="Cancel Test" class="table-icon">
                     </button>
                     
                     <button *ngIf="test.status === 'DRAFT'" 
@@ -243,19 +247,12 @@
                             aria-label="Retry Test">
                       <i class="fas fa-redo"></i>
                     </button>
-                    
-                    <button (click)="duplicateTest(test.id)" 
-                            class="btn-action btn-duplicate" 
-                            title="Duplicate Test"
-                            aria-label="Duplicate Test">
-                      <i class="fas fa-copy"></i>
-                    </button>
-                  
+
                     <button (click)="deleteTest(test.id)" 
                             class="btn-action btn-delete" 
                             title="Delete Test"
                             aria-label="Delete Test">
-                      <i class="fas fa-trash"></i>
+                      <img src = "delete.webp" alt="Delete" class="table-icon">
                     </button>
                   </div>
                 </td>
@@ -266,7 +263,7 @@
           <!-- Empty State -->
           <div *ngIf="filteredTests.length === 0 && !isLoading && !isRefreshing" class="empty-state">
             <div class="empty-icon">
-              <i class="fas fa-vial"></i>
+              <img src = "empty.webp" alt="Empty" class="empty-icon">
             </div>
             <h3>No Tests Found</h3>
             <p>{{searchQuery || statusFilter || projectFilter || typeFilter ? 'No tests match your current filters.' : 'You haven\'t created any tests yet.'}}</p>
