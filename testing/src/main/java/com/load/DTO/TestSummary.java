@@ -13,5 +13,5 @@ public class TestSummary {
     private String testName;
     private LocalDateTime createdAt;
     private TestRunStatus testRunStatus;
-   
+    
 }

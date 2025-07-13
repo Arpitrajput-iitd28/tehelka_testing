@@ -58,10 +58,9 @@ public class ReportService {
     }
 
     // Generate Excel report with summary, metrics, and graphs
-    public String generateExcelReport(Long projectId, Long testRunId, String summaryJson, String detailsJson, String graphsJson) throws Exception {
-        // Fetch metrics for this report/run
-        List<ReportMetric> metrics = reportMetricRepository.findByReportId(testRunId);
-
+    public String generateExcelReport(Long reportId, String summaryJson, String detailsJson, String graphsJson) throws Exception {
+        List<ReportMetric> metrics = reportMetricRepository.findByReportId(reportId);
+        
         Workbook workbook = new XSSFWorkbook();
 
         // 1. Summary Sheet

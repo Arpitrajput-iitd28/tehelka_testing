@@ -3,8 +3,11 @@ package com.load.Service;
 import com.load.DTO.ReportResultDTO;
 import com.load.Enums.TestRunStatus;
 import com.load.Model.Report;
+import com.load.Model.ReportMetric;
 import com.load.Model.RunTest;
 import com.load.Model.Test;
+import com.load.Repository.ReportMetricRepository;
+import com.load.Repository.ReportRepository;
 import com.load.Repository.RunTestRepository;
 import com.load.Repository.TestRepository;
 import com.load.Utils.JtlParser;
@@ -32,12 +35,16 @@ public class RunTestService {
     private final TestRepository testRepository;
     private final RunTestRepository runTestRepository;
     private final ReportService reportService;
+    private final ReportMetricRepository reportMetricRepository;
+    private final ReportRepository reportRepository;
     private final Set<Path> downloadedCsvFiles = new HashSet<>();
 
-    public RunTestService(TestRepository testRepository, RunTestRepository runTestRepository, ReportService reportService) {
+    public RunTestService(TestRepository testRepository, RunTestRepository runTestRepository, ReportService reportService, ReportMetricRepository reportMetricRepository, ReportRepository reportRepository) {
         this.testRepository = testRepository;
         this.runTestRepository = runTestRepository;
         this.reportService = reportService;
+        this.reportMetricRepository = reportMetricRepository;
+        this.reportRepository = reportRepository;
     }
 
     private boolean isUrl(String path) {
@@ -196,39 +203,76 @@ public class RunTestService {
         if (exitCode == 0) {
             test.setTestRunStatus(TestRunStatus.COMPLETED);
             Map<String, Object> jtlData = JtlParser.parseJtl(resultPath);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String summaryJson = objectMapper.writeValueAsString(jtlData.get("summary"));
-        String detailsJson = objectMapper.writeValueAsString(jtlData.get("samples"));
-        String graphsJson = null; 
-
-        String excelReportPath = reportService.generateExcelReport(
-                test.getProject().getId(),
-                runTest.getId(),
-                summaryJson,
-                detailsJson,
-                graphsJson
-            );
-
-
-    report=reportService.createReport(
-            test.getProject().getId(),
-            runTest.getId(),
-            summaryJson,
-            detailsJson,
-            graphsJson,
-            excelReportPath
-        );
+            ObjectMapper objectMapper = new ObjectMapper();
+            String summaryJson = objectMapper.writeValueAsString(jtlData.get("summary"));
+            String detailsJson = objectMapper.writeValueAsString(jtlData.get("samples"));
+            String graphsJson = null;
+        
+            // 1. Create and save the Report FIRST (with minimal info)
+            report = new Report();
+            report.setProjectId(test.getProject().getId());
+            report.setTestRunId(runTest.getId());
+            report.setGeneratedAt(LocalDateTime.now());
+            report.setSummaryJson(summaryJson);
+            report.setDetailsJson(detailsJson);
+            report.setGraphsJson(graphsJson);
+            // Don't set htmlReportContent/excelReportPath yet
+            report = reportRepository.save(report);; // <-- You may need to expose getReportRepository() in ReportService, or inject ReportRepository here
+        
+            // 2. Aggregate metrics and set the report on each metric
+            Map<String, List<JtlParser.Sample>> samplesByLabel = new HashMap<>();
+            for (JtlParser.Sample sample : (List<JtlParser.Sample>) jtlData.get("samples")) {
+                samplesByLabel.computeIfAbsent(sample.label, k -> new ArrayList<>()).add(sample);
+            }
+        
+            List<ReportMetric> metrics = new ArrayList<>();
+            for (Map.Entry<String, List<JtlParser.Sample>> entry : samplesByLabel.entrySet()) {
+                String label = entry.getKey();
+                List<JtlParser.Sample> group = entry.getValue();
+        
+                int count = group.size();
+                double avg = group.stream().mapToLong(s -> s.elapsed).average().orElse(0);
+                double min = group.stream().mapToLong(s -> s.elapsed).min().orElse(0);
+                double max = group.stream().mapToLong(s -> s.elapsed).max().orElse(0);
+                double stddev = Math.sqrt(group.stream().mapToDouble(s -> Math.pow(s.elapsed - avg, 2)).average().orElse(0));
+                long errorCount = group.stream().filter(s -> !s.success).count();
+                double errorPct = count > 0 ? (double) errorCount * 100 / count : 0;
+        
+                ReportMetric metric = new ReportMetric();
+                metric.setReport(report); // <-- Now report is NOT null!
+                metric.setLabel(label);
+                metric.setSamples(count);
+                metric.setAverage(avg);
+                metric.setMin(min);
+                metric.setMax(max);
+                metric.setStdDev(stddev);
+                metric.setErrorPct(errorPct);
+                // Throughput, receivedKbSec, sentKbSec can be set if you have data
+        
+                metrics.add(metric);
+            }
+        
+            // 3. Save all metrics to DB
+            reportMetricRepository.saveAll(metrics);
+        
+            // 4. Generate Excel report
+            String excelReportPath = reportService.generateExcelReport(
+                    report.getId(),
+                  
+                    summaryJson,
+                    detailsJson,
+                    graphsJson
+                );
+        
+            // 5. Update the report with the Excel path
+            report.setHtmlReportContent(excelReportPath);
+            report =reportRepository.save(report);;
+        
         } else {
             test.setTestRunStatus(TestRunStatus.FAILED);
             runTest.setErrorMessage("JMeter execution failed with exit code " + exitCode);
         }
-        runTestRepository.save(runTest);
-        testRepository.save(test);
-
-        if (exitCode != 0) {
-            throw new RuntimeException("JMeter execution failed with exit code " + exitCode);
-        }
-
+        
         return new ReportResultDTO(report.getId(), report.getHtmlReportContent());
     }
 }
