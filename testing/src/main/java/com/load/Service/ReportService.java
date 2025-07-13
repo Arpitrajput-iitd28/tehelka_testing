@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -16,6 +17,7 @@ import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xddf.usermodel.chart.*;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.load.Model.Report;
 import com.load.Model.ReportMetric;
 import com.load.Repository.ReportMetricRepository;
@@ -60,7 +62,7 @@ public class ReportService {
     // Generate Excel report with summary, metrics, and graphs
     public String generateExcelReport(Long reportId, String summaryJson, String detailsJson, String graphsJson) throws Exception {
         List<ReportMetric> metrics = reportMetricRepository.findByReportId(reportId);
-        
+
         Workbook workbook = new XSSFWorkbook();
 
         // 1. Summary Sheet
@@ -69,6 +71,17 @@ public class ReportService {
         headerRow.createCell(0).setCellValue("Metric");
         headerRow.createCell(1).setCellValue("Value");
         // Parse summaryJson and populate summarySheet as needed
+        // Parse summaryJson and populate summarySheet
+    if (summaryJson != null && !summaryJson.isEmpty()) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> summaryMap = objectMapper.readValue(summaryJson, Map.class);
+        int summaryRowNum = 1;
+        for (Map.Entry<String, Object> entry : summaryMap.entrySet()) {
+            Row row = summarySheet.createRow(summaryRowNum++);
+            row.createCell(0).setCellValue(entry.getKey());
+            row.createCell(1).setCellValue(entry.getValue() != null ? entry.getValue().toString() : "");
+        }
+    }
 
         // 2. Metrics Sheet
         XSSFSheet metricsSheet = (XSSFSheet) workbook.createSheet("Metrics");

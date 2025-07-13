@@ -25,7 +25,7 @@ public class TopController {
 
     @GetMapping("/completed")
     public List<ScheduledSummary> getAllCompletedTests() {
-        return testService.getAllScheduledTests();
+        return testService.getAllCompletedTests();
     }
 
 }
